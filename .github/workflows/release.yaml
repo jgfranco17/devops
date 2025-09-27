@@ -24,7 +24,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Checkout repository
+      - name: Release
         uses: ./shared-actions/create-release
         with:
           spec-file: specs.json
