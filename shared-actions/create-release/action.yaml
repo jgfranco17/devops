@@ -5,6 +5,9 @@ inputs:
   spec-file:
     description: "Path to the specification file; must be JSON type."
     required: true
+  git-token:
+    description: "GitHub token with write access to the repository."
+    required: true
   release-notes-dir:
     description: "Path to the directory containing release notes."
     required: false
@@ -130,7 +133,7 @@ runs:
       if: steps.check_version.outputs.should_release == 'true'
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.git-token }}
       with:
         tag_name: ${{ steps.read_version.outputs.version }}
         release_name: ${{ steps.read_version.outputs.version }}
