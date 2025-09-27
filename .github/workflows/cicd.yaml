@@ -1,0 +1,52 @@
+---
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run setup
+        uses: ./.github/actions/setup-workspace
+
+      - name: Run tests
+        run: |
+          go clean -testcache
+          go test -v -cover -race ./...
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run setup
+        uses: ./.github/actions/setup-workspace
+
+      - name: Build binary
+        run: |
+          just tidy
+          just build
+
+      - name: Run binary
+        run: |
+          ./devops --help
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: devops-linux-amd64
+          path: ./devops

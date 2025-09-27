@@ -20,6 +20,7 @@ htmlcov/
 .idea
 .DS_Store
 node_modules
+devops
 
 # Go workspace
 go.work
