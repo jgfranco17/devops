@@ -1,0 +1,21 @@
+---
+name: "Setup Python Workspace"
+description: "Configure Python tools with UV"
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version-file: "pyproject.toml"
+
+    - name: Install requirements
+      shell: bash
+      run: uv sync --locked --all-extras --dev
+
+    - name: Install Just
+      uses: extractions/setup-just@v2

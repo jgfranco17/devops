@@ -1,0 +1,23 @@
+name: Linting
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install linters
+        run: |
+          pip install --upgrade pip
+          pip install pre-commit
+
+      - name: Run linters
+        run: pre-commit run --all-files
