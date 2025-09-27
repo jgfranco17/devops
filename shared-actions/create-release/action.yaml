@@ -1,0 +1,149 @@
+---
+name: "Create release"
+description: "Prepare a repository for a new release"
+inputs:
+  spec-file:
+    description: "Path to the specification file; must be JSON type."
+    required: true
+  release-notes-dir:
+    description: "Path to the directory containing release notes."
+    required: false
+    default: ".github/release"
+
+runs:
+  using: composite
+  steps:
+    - name: Read version from spec file
+      shell: bash
+      id: read_version
+      run: |
+        # Check if ${{ inputs.spec-file }} exists
+        if [ ! -f "${{ inputs.spec-file }}" ]; then
+          echo "❌ ${{ inputs.spec-file }} file not found!"
+          exit 1
+        fi
+
+        # Extract version from ${{ inputs.spec-file }}
+        VERSION=$(jq -r '.version' ${{ inputs.spec-file }})
+
+        if [ "$VERSION" = "null" ] || [ -z "$VERSION" ]; then
+          echo "❌ Version not found in ${{ inputs.spec-file }} or is empty"
+          exit 1
+        fi
+
+        # Ensure version starts with 'v'
+        if [[ ! $VERSION =~ ^v ]]; then
+          VERSION="v$VERSION"
+        fi
+
+        # Validate version format (semantic versioning)
+        if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
+          echo "❌ Invalid version format in ${{ inputs.spec-file }}: ${VERSION}"
+          echo "Expected format: x.y.z (semantic versioning)"
+          exit 1
+        fi
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "📋 Version from ${{ inputs.spec-file }}: $VERSION"
+
+    - name: Get previous tag
+      shell: bash
+      id: previous_tag
+      run: |
+        git fetch --tags
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        echo "tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+    - name: Check if version already exists
+      shell: bash
+      id: check_version
+      run: |
+        SPEC_VERSION="${{ steps.read_version.outputs.version }}"
+        PREVIOUS_TAG="${{ steps.previous_tag.outputs.tag }}"
+
+        # Check if tag already exists
+        if git rev-parse "$SPEC_VERSION" >/dev/null 2>&1; then
+          echo "❌ Tag $SPEC_VERSION already exists!"
+          echo "Please update the version in ${{ inputs.spec-file }} to create a new release."
+          exit 1
+        fi
+
+        # Check if version is the same as previous (no version bump)
+        if [ "$SPEC_VERSION" = "$PREVIOUS_TAG" ]; then
+          echo "ℹ️  Version $SPEC_VERSION hasn't changed from previous release"
+          echo "This indicates ${{ inputs.spec-file }} was updated with non-version changes only"
+          echo "Skipping release creation..."
+          echo "should_release=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Check if version is newer than previous
+        if [ "$PREVIOUS_TAG" != "v0.0.0" ]; then
+          # Remove 'v' prefix for comparison
+          SPEC_NUM=${SPEC_VERSION#v}
+          PREV_NUM=${PREVIOUS_TAG#v}
+
+          # Simple version comparison (works for semantic versioning)
+          if printf '%s\n' "$PREV_NUM" "$SPEC_NUM" | sort -V | head -n1 | grep -q "^$SPEC_NUM$"; then
+            echo "⚠️  Warning: Version $SPEC_VERSION appears to be older than previous version $PREVIOUS_TAG"
+            echo "Proceeding anyway..."
+          fi
+        fi
+
+        echo "should_release=true" >> $GITHUB_OUTPUT
+        echo "✅ Version validation passed: $PREVIOUS_TAG → $SPEC_VERSION"
+
+    - name: Generate changelog
+      shell: bash
+      id: changelog
+      if: steps.check_version.outputs.should_release == 'true'
+      run: |
+        SPEC_VERSION="${{ steps.read_version.outputs.version }}"
+        PREVIOUS_TAG="${{ steps.previous_tag.outputs.tag }}"
+
+        # Get description from ${{ inputs.spec-file }} if available
+        CHANGELOG=$(cat ".github/release/${SPEC_VERSION}.md")
+
+        if [ "$PREVIOUS_TAG" = "v0.0.0" ]; then
+          COMMITS=$(git log --pretty=format:"- %s (%h)" HEAD)
+        else
+          COMMITS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+        fi
+
+        {
+          echo 'changelog<<EOF'
+          echo "$CHANGELOG"
+          echo 'EOF'
+        } >> $GITHUB_OUTPUT
+
+    - name: Create tag
+      shell: bash
+      if: steps.check_version.outputs.should_release == 'true'
+      run: |
+        SPEC_VERSION="${{ steps.read_version.outputs.version }}"
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a $SPEC_VERSION -m "Release $SPEC_VERSION"
+        git push origin $SPEC_VERSION
+
+    - name: Create GitHub Release
+      if: steps.check_version.outputs.should_release == 'true'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.read_version.outputs.version }}
+        release_name: ${{ steps.read_version.outputs.version }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: false
+
+    - name: Skip release notification
+      shell: bash
+      if: steps.check_version.outputs.should_release == 'false'
+      run: |
+        echo "🔄 Workflow completed without creating a release"
+        echo "💡 To create a new release, update the 'version' field in ${{ inputs.spec-file }}"
+        echo ""
+        echo "Current version in ${{ inputs.spec-file }}: ${{ steps.read_version.outputs.version }}"
+        echo "Latest released version: ${{ steps.previous_tag.outputs.tag }}"
