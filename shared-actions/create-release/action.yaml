@@ -16,6 +16,14 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Set up GitHub CLI
+      if: steps.check_version.outputs.should_release == 'true'
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install gh -y
+        gh --version
+
     - name: Read version from spec file
       shell: bash
       id: read_version
@@ -131,15 +139,14 @@ runs:
 
     - name: Create GitHub Release
       if: steps.check_version.outputs.should_release == 'true'
-      uses: actions/create-release@v1
+      shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.git-token }}
-      with:
-        tag_name: ${{ steps.read_version.outputs.version }}
-        release_name: ${{ steps.read_version.outputs.version }}
-        body: ${{ steps.changelog.outputs.changelog }}
-        draft: false
-        prerelease: false
+      run: |
+        gh release create ${{ steps.read_version.outputs.version }} \
+          --title "${{ steps.read_version.outputs.version }}" \
+          --notes "${{ steps.changelog.outputs.changelog }}" \
+          --latest
 
     - name: Skip release notification
       shell: bash
