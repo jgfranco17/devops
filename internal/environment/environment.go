@@ -1,3 +1,4 @@
+// Package environment provides tooling for interacting with the environment.
 package environment
 
 import "os"
