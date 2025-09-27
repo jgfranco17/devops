@@ -94,5 +94,5 @@ func TestCopyLocalFile_Success(t *testing.T) {
 func TestCopyLocalFile_CannotReadSrc(t *testing.T) {
 	fileSystem := fstest.MapFS{}
 	err := CopyFile(fileSystem, "/path/does/not/exist.txt", "destination.txt")
-	assert.ErrorContains(t, err, "unable to read src file")
+	assert.ErrorContains(t, err, "file does not exist")
 }

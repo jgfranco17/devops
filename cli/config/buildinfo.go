@@ -1,10 +1,10 @@
-package buildinfo
+package config
 
 import (
 	"encoding/json"
 )
 
-// GetVersion returns the version defined in .arene/part_definitions.json.
+// GetVersion returns the version found in a JSON definition.
 func GetVersion(definition []byte) (version string, err error) {
 	partInfo := struct {
 		Version string

@@ -8,20 +8,13 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/arene-vertex/arene-vertex-cli/internal/derrors"
 )
 
 func CopyFile(srcFS fs.FS, srcRelPath string, dstPath string) (err error) {
-	defer derrors.Wrap(&err, "CopyFile(%s, %s, %s)", srcFS, srcRelPath, dstPath)
 	// Open the source file
 	srcFile, err := srcFS.Open(srcRelPath)
 	if err != nil {
-		return &derrors.VertexError{
-			Err:      fmt.Errorf("unable to read src file %s: %w", srcRelPath, err),
-			Code:     "VXVC0059",
-			ExitCode: derrors.VertexRuntimeError,
-		}
+		return err
 	}
 	defer srcFile.Close()
 
@@ -29,29 +22,17 @@ func CopyFile(srcFS fs.FS, srcRelPath string, dstPath string) (err error) {
 	dstDirPath := path.Dir(dstPath)
 	err = os.MkdirAll(dstDirPath, 0755)
 	if err != nil {
-		return &derrors.VertexError{
-			Err:      fmt.Errorf("unable to create destination directory %s: %w", dstDirPath, err),
-			Code:     "VXVC0060",
-			ExitCode: derrors.VertexRuntimeError,
-		}
+		return err
 	}
 
 	dstFile, err := os.Create(dstPath)
 	if err != nil {
-		return &derrors.VertexError{
-			Err:      fmt.Errorf("unable to create destination file %s: %w", dstPath, err),
-			Code:     "VXVC0061",
-			ExitCode: derrors.VertexRuntimeError,
-		}
+		return err
 	}
 
 	// Copy the contents from the source file to the destination file
 	if _, err := io.Copy(dstFile, srcFile); err != nil {
-		return &derrors.VertexError{
-			Err:      fmt.Errorf("unable to copy contents from %s to %s: %w", srcFile, dstPath, err),
-			Code:     "VXVC0062",
-			ExitCode: derrors.VertexRuntimeError,
-		}
+		return err
 	}
 	return dstFile.Close()
 }
@@ -60,22 +41,13 @@ func CopyFile(srcFS fs.FS, srcRelPath string, dstPath string) (err error) {
 // Paths matching skip prefixes will not be copied. skip prefixes should be
 // cleaned according to https://pkg.go.dev/path/filepath#Clean.
 func CopyDirectory(srcFS fs.FS, srcDir, dstDir string, skip []string) (err error) {
-	defer derrors.Wrap(&err, "CopyDirectory(%s/%s, %s)", srcFS, srcDir, dstDir)
 	subFS, err := fs.Sub(srcFS, srcDir)
 	if err != nil {
-		return &derrors.VertexError{
-			Err:      err,
-			Code:     "VXVC0063",
-			ExitCode: derrors.VertexRuntimeError,
-		}
+		return err
 	}
 	err = copyFS(dstDir, subFS, skip)
 	if err != nil {
-		return &derrors.VertexError{
-			Err:      err,
-			Code:     "VXVC0064",
-			ExitCode: derrors.VertexRuntimeError,
-		}
+		return err
 	}
 	return nil
 }
