@@ -1,0 +1,11 @@
+---
+repo_url: www.example.com
+tasks:
+  test:
+    description: Hello World
+    category: test
+    env:
+      IS_TEST: "true"
+    steps:
+      - cmd: ls
+        args: -la

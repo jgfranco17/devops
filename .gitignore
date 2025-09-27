@@ -20,3 +20,7 @@ htmlcov/
 .idea
 .DS_Store
 node_modules
+
+# Go workspace
+go.work
+go.work.sum
