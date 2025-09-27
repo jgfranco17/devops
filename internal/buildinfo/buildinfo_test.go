@@ -1,4 +1,4 @@
-package config
+package buildinfo
 
 import (
 	"testing"
