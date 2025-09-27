@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jgfranco17/dev-tooling-go/logging"
 	"github.com/jgfranco17/devops/cli/config"
 	"github.com/jgfranco17/devops/cli/executor"
 )
@@ -25,13 +24,11 @@ func GetBuildCommand(shellExecutor BashExecutor) *cobra.Command {
 		Long:  "Read the config file and run the build operations defined in it.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logger := logging.FromContext(cmd.Context())
 			ctx := cmd.Context()
 			cfg := config.FromContext(ctx)
 			if err := cfg.Build(ctx, shellExecutor); err != nil {
 				return fmt.Errorf("build failed: %w", err)
 			}
-			logger.Info("Build completed successfully")
 			return nil
 		},
 		SilenceUsage:  true,

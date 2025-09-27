@@ -2,8 +2,8 @@ package core
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/signal"
@@ -24,6 +24,8 @@ type CommandRegistry struct {
 // NewCommandRegistry creates a new instance of CommandRegistry
 func NewCommandRegistry(name string, description string, version string) *CommandRegistry {
 	var verbosity int
+	var path string
+
 	root := &cobra.Command{
 		Use:     name,
 		Version: version,
@@ -45,7 +47,7 @@ func NewCommandRegistry(name string, description string, version string) *Comman
 			logger := logging.New(cmd.ErrOrStderr(), level)
 			ctx := logging.WithContext(cmd.Context(), logger)
 
-			definition, err := loadConfig()
+			definition, err := loadConfig(ctx, path)
 			if err != nil {
 				return err
 			}
@@ -74,7 +76,7 @@ func NewCommandRegistry(name string, description string, version string) *Comman
 	}
 
 	root.PersistentFlags().CountVarP(&verbosity, "verbose", "v", "Increase verbosity (-v or -vv)")
-
+	root.PersistentFlags().StringVarP(&path, "file", "f", config.DefinitionFile, "Path to the project definition file")
 	return &CommandRegistry{
 		rootCmd:   root,
 		verbosity: verbosity,
@@ -97,18 +99,38 @@ func (cr *CommandRegistry) Execute() error {
 	return cr.rootCmd.Execute()
 }
 
-func loadConfig() (config.ProjectDefinition, error) {
-	path, err := config.GetFilePath()
+func loadConfig(ctx context.Context, path string) (config.ProjectDefinition, error) {
+	logger := logging.FromContext(ctx)
+	pathToUse := path
+	_, err := os.Stat(path)
 	if err != nil {
-		return config.ProjectDefinition{}, err
+		if !errors.Is(err, fs.ErrNotExist) {
+			return config.ProjectDefinition{}, err
+		}
+		logger.WithFields(logrus.Fields{
+			"path": path,
+		}).Warn("Config not found at given path, using default")
+		defaultPath, err := config.GetFilePath()
+		if err != nil {
+			if !errors.Is(err, fs.ErrNotExist) {
+				return config.ProjectDefinition{}, err
+			}
+		} else {
+			pathToUse = defaultPath
+		}
 	}
-	file, err := os.Open(path)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return config.ProjectDefinition{}, err
+	logger.WithFields(logrus.Fields{
+		"path": pathToUse,
+	}).Trace("Found config file")
+	file, err := os.Open(pathToUse)
+	if err != nil {
+		return config.ProjectDefinition{}, fmt.Errorf("failed to open config (%s): %w", pathToUse, err)
 	}
-	var cfg config.ProjectDefinition
-	if err := json.NewDecoder(file).Decode(&cfg); err != nil {
-		return config.ProjectDefinition{}, err
+	defer file.Close()
+
+	cfg, err := config.Load(file)
+	if err != nil {
+		return config.ProjectDefinition{}, fmt.Errorf("failed to load config (%s): %w", pathToUse, err)
 	}
-	return cfg, nil
+	return *cfg, nil
 }

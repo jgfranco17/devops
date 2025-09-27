@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	DefinitionFile = "definition.json"
+	DefinitionFile = "devops-definition.yaml"
 )
 
 // GetFilePath returns the path to the project definition file.

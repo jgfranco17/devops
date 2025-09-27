@@ -10,6 +10,7 @@ import (
 	"github.com/jgfranco17/dev-tooling-go/logging"
 	"github.com/jgfranco17/devops/cli/executor"
 	"github.com/jgfranco17/devops/internal/outputs"
+	"github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v3"
 )
@@ -33,12 +34,15 @@ func (d *ProjectDefinition) Build(ctx context.Context, shellExecutor ShellExecut
 
 	if len(d.Codebase.Build.Steps) == 0 {
 		logger.Warn("No build steps defined in the configuration.")
+		return nil
 	}
 	if err := d.Codebase.Build.Run(ctx, shellExecutor); err != nil {
 		return fmt.Errorf("failed to run build steps: %w", err)
 	}
 	duration := time.Since(startTime)
-	logger.Infof("Build completed successfully in %dms", duration.Milliseconds())
+	logger.WithFields(logrus.Fields{
+		"duration": duration,
+	}).Info("Build completed successfully")
 	return nil
 }
 

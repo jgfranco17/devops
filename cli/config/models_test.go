@@ -63,9 +63,7 @@ func TestProjectDefinition_Build(t *testing.T) {
 					},
 				},
 			},
-			mockSetup: func(m *MockShellExecutor) {
-				m.On("AddEnv", mock.AnythingOfType("[]string")).Return()
-			},
+			mockSetup:      func(m *MockShellExecutor) {},
 			expectWarnings: true,
 		},
 		{
