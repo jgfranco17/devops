@@ -16,13 +16,11 @@ type BashExecutor interface {
 }
 
 func GetBuildCommand(shellExecutor BashExecutor) *cobra.Command {
-	var noInstall bool
-
 	cmd := &cobra.Command{
 		Use:   "build",
 		Short: "Run the build operations",
-		Long:  "Read the config file and run the build operations defined in it.",
-		Args:  cobra.ExactArgs(0),
+		Long:  "Build the project according to the configuration..",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			cfg := config.FromContext(ctx)
@@ -34,6 +32,25 @@ func GetBuildCommand(shellExecutor BashExecutor) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
-	cmd.Flags().BoolVar(&noInstall, "no-install", false, "Install codebase dependencies before building")
+	return cmd
+}
+
+func GetTestCommand(shellExecutor BashExecutor) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "test",
+		Short: "Run the test operations",
+		Long:  "Run the designated test operations.",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			cfg := config.FromContext(ctx)
+			if err := cfg.Test(ctx, shellExecutor); err != nil {
+				return fmt.Errorf("tests failed: %w", err)
+			}
+			return nil
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 	return cmd
 }

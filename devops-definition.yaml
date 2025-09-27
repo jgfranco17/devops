@@ -16,6 +16,11 @@ codebase:
       - go mod download all
       - go mod tidy
       - go mod verify
+  test:
+    fail_fast: true
+    steps:
+      - go clean -testcache
+      - go test -cover ./...
   build:
     fail_fast: true
     env:
@@ -24,7 +29,5 @@ codebase:
       GOARCH: "amd64"
       GO111MODULE: "on"
     steps:
-      - go clean -testcache
-      - go test -cover ./...
       - go build -ldflags="-s -w" -o ./devops .
       - chmod +x ./devops

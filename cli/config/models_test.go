@@ -29,6 +29,129 @@ func (m *MockShellExecutor) AddEnv(env []string) {
 	m.Called(env)
 }
 
+func TestProjectDefinition_Test(t *testing.T) {
+	tests := []struct {
+		name           string
+		project        ProjectDefinition
+		mockSetup      func(*MockShellExecutor)
+		expectedError  string
+		expectWarnings bool
+	}{
+		{
+			name: "successful test with steps",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Test: Operation{
+						Steps: []string{"go test ./...", "go test -race ./..."},
+					},
+				},
+			},
+			mockSetup: func(m *MockShellExecutor) {
+				m.On("AddEnv", mock.AnythingOfType("[]string")).Return()
+				m.On("Exec", mock.Anything, "go test ./...").Return(executor.Result{ExitCode: 0, Stdout: "PASS"}, nil)
+				m.On("Exec", mock.Anything, "go test -race ./...").Return(executor.Result{ExitCode: 0, Stdout: "PASS"}, nil)
+			},
+		},
+		{
+			name: "test with no steps should warn",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Test: Operation{
+						Steps: []string{},
+					},
+				},
+			},
+			mockSetup: func(m *MockShellExecutor) {
+				// No expectations for empty steps
+			},
+			expectWarnings: true,
+		},
+		{
+			name: "test failure should return error",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+				},
+			},
+			mockSetup: func(m *MockShellExecutor) {
+				m.On("AddEnv", mock.AnythingOfType("[]string")).Return()
+				m.On("Exec", mock.Anything, "go test ./...").Return(executor.Result{ExitCode: 1, Stderr: "test failed"}, nil)
+			},
+			expectedError: "failed to run test steps",
+		},
+		{
+			name: "test with environment variables",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Test: Operation{
+						Env: map[string]string{
+							"TEST_ENV":    "test_value",
+							"GO111MODULE": "on",
+						},
+						Steps: []string{"go test ./..."},
+					},
+				},
+			},
+			mockSetup: func(m *MockShellExecutor) {
+				m.On("AddEnv", mock.MatchedBy(func(env []string) bool {
+					// Check that our env vars are included
+					envStr := ""
+					for _, e := range env {
+						envStr += e + " "
+					}
+					return strings.Contains(envStr, "TEST_ENV=test_value") &&
+						strings.Contains(envStr, "GO111MODULE=on")
+				})).Return()
+				m.On("Exec", mock.Anything, "go test ./...").Return(executor.Result{ExitCode: 0, Stdout: "PASS"}, nil)
+			},
+		},
+		{
+			name: "test with fail_fast enabled",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Test: Operation{
+						FailFast: true,
+						Steps:    []string{"go test ./pkg1", "go test ./pkg2"},
+					},
+				},
+			},
+			mockSetup: func(m *MockShellExecutor) {
+				m.On("AddEnv", mock.AnythingOfType("[]string")).Return()
+				m.On("Exec", mock.Anything, "go test ./pkg1").Return(executor.Result{ExitCode: 0, Stdout: "PASS"}, nil)
+				m.On("Exec", mock.Anything, "go test ./pkg2").Return(executor.Result{ExitCode: 1, Stderr: "test failed"}, nil)
+			},
+			expectedError: "failed to run test steps",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockExecutor := &MockShellExecutor{}
+			tt.mockSetup(mockExecutor)
+
+			logger := logging.New(os.Stderr, logrus.InfoLevel)
+			ctx := logging.WithContext(context.Background(), logger)
+			err := tt.project.Test(ctx, mockExecutor)
+
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			mockExecutor.AssertExpectations(t)
+		})
+	}
+}
+
 func TestProjectDefinition_Build(t *testing.T) {
 	tests := []struct {
 		name           string

@@ -28,6 +28,19 @@ type ProjectDefinition struct {
 	Codebase    Codebase `yaml:"codebase"`
 }
 
+func (d *ProjectDefinition) Test(ctx context.Context, shellExecutor ShellExecutor) error {
+	logger := logging.FromContext(ctx)
+	if len(d.Codebase.Test.Steps) == 0 {
+		logger.Warn("No test steps defined in the configuration.")
+		return nil
+	}
+	if err := d.Codebase.Test.Run(ctx, shellExecutor); err != nil {
+		return fmt.Errorf("failed to run test steps: %w", err)
+	}
+	logger.Info("Tests completed successfully")
+	return nil
+}
+
 func (d *ProjectDefinition) Build(ctx context.Context, shellExecutor ShellExecutor) error {
 	logger := logging.FromContext(ctx)
 	startTime := time.Now()
@@ -61,6 +74,7 @@ type Codebase struct {
 	Language     string    `yaml:"language"`
 	Dependencies string    `yaml:"dependencies,omitempty"`
 	Install      Operation `yaml:"install,omitempty"`
+	Test         Operation `yaml:"test,omitempty"`
 	Build        Operation `yaml:"build,omitempty"`
 }
 
