@@ -1,0 +1,7 @@
+{
+  "author": "Joaquin Gabriel Franco",
+  "version": "0.0.1",
+  "repository": "https://github.com/jgfranco17/devops-common",
+  "languages": ["Go"],
+  "active": true
+}

@@ -105,7 +105,7 @@ runs:
         PREVIOUS_TAG="${{ steps.previous_tag.outputs.tag }}"
 
         # Get description from ${{ inputs.spec-file }} if available
-        CHANGELOG=$(cat ".github/release/${SPEC_VERSION}.md")
+        CHANGELOG=$(cat "${{ inputs.release-notes-dir }}/${SPEC_VERSION}.md")
 
         if [ "$PREVIOUS_TAG" = "v0.0.0" ]; then
           COMMITS=$(git log --pretty=format:"- %s (%h)" HEAD)
