@@ -2,11 +2,16 @@ package core
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"io/fs"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/jgfranco17/dev-tooling-go/logging"
+	"github.com/jgfranco17/devops/cli/config"
+	"github.com/jgfranco17/devops/internal/fileutils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +28,7 @@ func NewCommandRegistry(name string, description string, version string) *Comman
 		Use:     name,
 		Version: version,
 		Short:   description,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			verbosity, _ := cmd.Flags().GetCount("verbose")
 			var level logrus.Level
 			switch verbosity {
@@ -39,6 +44,19 @@ func NewCommandRegistry(name string, description string, version string) *Comman
 
 			logger := logging.New(cmd.ErrOrStderr(), level)
 			ctx := logging.WithContext(cmd.Context(), logger)
+
+			definition, err := loadConfig()
+			if err != nil {
+				return err
+			}
+			ctx = config.WithContext(ctx, definition)
+
+			cwd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			ctx = fileutils.ApplyRootDirToContext(ctx, os.DirFS(cwd))
+
 			ctx, cancel := context.WithCancel(ctx)
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
@@ -49,7 +67,9 @@ func NewCommandRegistry(name string, description string, version string) *Comman
 				case <-ctx.Done():
 				}
 			}()
+
 			cmd.SetContext(ctx)
+			return nil
 		},
 	}
 
@@ -75,4 +95,20 @@ func (cr *CommandRegistry) RegisterCommands(commands []*cobra.Command) {
 // Execute executes the root command
 func (cr *CommandRegistry) Execute() error {
 	return cr.rootCmd.Execute()
+}
+
+func loadConfig() (config.ProjectDefinition, error) {
+	path, err := config.GetFilePath()
+	if err != nil {
+		return config.ProjectDefinition{}, err
+	}
+	file, err := os.Open(path)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return config.ProjectDefinition{}, err
+	}
+	var cfg config.ProjectDefinition
+	if err := json.NewDecoder(file).Decode(&cfg); err != nil {
+		return config.ProjectDefinition{}, err
+	}
+	return cfg, nil
 }

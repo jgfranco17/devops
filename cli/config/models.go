@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/jgfranco17/dev-tooling-go/logging"
 	"github.com/jgfranco17/devops/cli/executor"
@@ -19,11 +20,26 @@ type ShellExecutor interface {
 }
 
 type ProjectDefinition struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description,omitempty"`
-	Version     string   `json:"version"`
-	RepoUrl     string   `json:"repo_url"`
-	Codebase    Codebase `json:"codebase"`
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description,omitempty"`
+	Version     string   `yaml:"version"`
+	RepoUrl     string   `yaml:"repo_url"`
+	Codebase    Codebase `yaml:"codebase"`
+}
+
+func (d *ProjectDefinition) Build(ctx context.Context, shellExecutor ShellExecutor) error {
+	logger := logging.FromContext(ctx)
+	startTime := time.Now()
+
+	if len(d.Codebase.Build.Steps) == 0 {
+		logger.Warn("No build steps defined in the configuration.")
+	}
+	if err := d.Codebase.Build.Run(ctx, shellExecutor); err != nil {
+		return fmt.Errorf("failed to run build steps: %w", err)
+	}
+	duration := time.Since(startTime)
+	logger.Infof("Build completed successfully in %dms", duration.Milliseconds())
+	return nil
 }
 
 // Load reads a YAML configuration from the provided reader and unmarshals
@@ -38,16 +54,16 @@ func Load(r io.Reader) (*ProjectDefinition, error) {
 }
 
 type Codebase struct {
-	Language     string    `json:"language"`
-	Dependencies string    `json:"dependencies,omitempty"`
-	Install      Operation `json:"install,omitempty"`
-	Build        Operation `json:"build,omitempty"`
+	Language     string    `yaml:"language"`
+	Dependencies string    `yaml:"dependencies,omitempty"`
+	Install      Operation `yaml:"install,omitempty"`
+	Build        Operation `yaml:"build,omitempty"`
 }
 
 type Operation struct {
-	FailFast bool              `json:"fail_fast,omitempty"`
-	Env      map[string]string `json:"env,omitempty"`
-	Steps    []string          `json:"steps"`
+	FailFast bool              `yaml:"fail_fast,omitempty"`
+	Env      map[string]string `yaml:"env,omitempty"`
+	Steps    []string          `yaml:"steps"`
 }
 
 // Run executes the defined steps in the Operation using the provided envs.

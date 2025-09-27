@@ -1,32 +1,45 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/jgfranco17/devops/cli/core"
 	"github.com/jgfranco17/devops/cli/executor"
+
+	_ "embed" // Required for the //go:embed directive
 )
 
-const (
-	projectName        = "devops"
-	projectDescription = "DevOps: Simplifying your CI/CD pipelines."
-)
+//go:embed specs.json
+var embeddedConfig []byte
 
-var (
-	version string = "0.0.0-dev.1"
-)
+type ProjectMetadata struct {
+	Author      string `json:"author"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Version     string `json:"version"`
+	Repository  string `json:"repository"`
+}
 
 func main() {
+	var metadata ProjectMetadata
+	if err := json.Unmarshal(embeddedConfig, &metadata); err != nil {
+		fmt.Printf("Error unmarshaling config: %v\n", err)
+		os.Exit(1)
+	}
+
 	executor := &executor.DefaultExecutor{}
-	command := core.NewCommandRegistry(projectName, projectDescription, version)
+	command := core.NewCommandRegistry(metadata.Name, metadata.Description, metadata.Version)
 	commandsList := []*cobra.Command{
 		core.GetBuildCommand(executor),
 	}
 	command.RegisterCommands(commandsList)
 
-	err := command.Execute()
-	if err != nil {
+	if err := command.Execute(); err != nil {
 		log.Error(err.Error())
 	}
 }

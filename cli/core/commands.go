@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -18,8 +17,8 @@ type BashExecutor interface {
 }
 
 func GetBuildCommand(shellExecutor BashExecutor) *cobra.Command {
-	var filePath string
 	var noInstall bool
+
 	cmd := &cobra.Command{
 		Use:   "build",
 		Short: "Run the build operations",
@@ -27,29 +26,17 @@ func GetBuildCommand(shellExecutor BashExecutor) *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := logging.FromContext(cmd.Context())
-			ctx, cancel := context.WithCancel(cmd.Context())
-			defer cancel()
-			logger.Debugf("Starting build with config file: %s", filePath)
-			contents, err := os.Open(filePath)
-			if err != nil {
-				return fmt.Errorf("failed to open file %s: %w", filePath, err)
-			}
-			cfg, err := config.Load(contents)
-			if err != nil {
-				return fmt.Errorf("failed to load config from file: %w", err)
-			}
-			opts := &config.BuildOptions{
-				NoInstall: noInstall,
-			}
-			if err := config.Build(ctx, shellExecutor, cfg, opts); err != nil {
+			ctx := cmd.Context()
+			cfg := config.FromContext(ctx)
+			if err := cfg.Build(ctx, shellExecutor); err != nil {
 				return fmt.Errorf("build failed: %w", err)
 			}
+			logger.Info("Build completed successfully")
 			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
-	cmd.Flags().StringVarP(&filePath, "file", "f", ".opsrunner.yaml", "OpsRunner definition file")
 	cmd.Flags().BoolVar(&noInstall, "no-install", false, "Install codebase dependencies before building")
 	return cmd
 }

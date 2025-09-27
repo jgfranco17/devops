@@ -1,7 +1,7 @@
 {
   "author": "Joaquin Gabriel Franco",
+  "name": "devops",
+  "description": "DevOps: Simplifying your CI/CD pipelines.",
   "version": "0.0.2",
-  "repository": "https://github.com/jgfranco17/devops-common",
-  "languages": ["Bash", "Python"],
-  "active": true
+  "repository": "https://github.com/jgfranco17/devops-common"
 }
