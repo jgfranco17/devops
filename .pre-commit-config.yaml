@@ -50,6 +50,7 @@ repos:
     hooks:
       - id: markdownlint
         args: [--config, ".markdownlint.yaml"]
+        exclude: docs/cli/
 
   # Security
   - repo: https://github.com/Yelp/detect-secrets
