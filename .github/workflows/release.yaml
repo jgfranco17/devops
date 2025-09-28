@@ -4,12 +4,8 @@ on:
   push:
     branches:
       - "main"
-    paths-ignore:
-      - "README.md"
-      - "docs/**"
-      - ".gitignore"
-      - "LICENSE"
-      - ".github/**"
+    paths:
+      - "devops-definition.yaml"
 
 permissions:
   contents: write
