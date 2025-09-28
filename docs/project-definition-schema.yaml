@@ -1,0 +1,158 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://github.com/jgfranco17/devops/project-definition-schema.yaml"
+title: "Project Definition Schema"
+description: "Schema for validating DevOps project definition YAML files"
+type: object
+required:
+  - name
+  - version
+  - codebase
+properties:
+  name:
+    type: string
+    description: "The name of the project"
+    minLength: 1
+    pattern: "^[a-zA-Z0-9_-]+$"
+  description:
+    type: string
+    description: "A brief description of the project"
+  version:
+    type: string
+    description: "The version of the project"
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+  repo_url:
+    type: string
+    description: "The repository URL of the project"
+    format: uri
+  codebase:
+    type: object
+    description: "Configuration for the codebase"
+    required:
+      - language
+    properties:
+      language:
+        type: string
+        description: "The programming language of the project"
+        minLength: 1
+        enum:
+          - go
+          - python
+          - javascript
+          - typescript
+          - java
+          - csharp
+          - rust
+          - cpp
+          - c
+          - php
+          - ruby
+          - swift
+          - kotlin
+          - scala
+          - clojure
+          - haskell
+          - erlang
+          - elixir
+          - dart
+          - r
+          - matlab
+          - shell
+          - powershell
+          - yaml
+          - json
+          - xml
+          - html
+          - css
+          - sql
+          - dockerfile
+          - makefile
+          - cmake
+          - gradle
+          - maven
+          - sbt
+          - cargo
+          - composer
+          - pip
+          - npm
+          - yarn
+          - pnpm
+          - bower
+          - gem
+          - cocoapods
+          - carthage
+          - spm
+          - conan
+          - vcpkg
+          - hunter
+          - bazel
+          - buck
+          - pants
+          - please
+          - just
+          - make
+          - ninja
+          - ant
+          - rake
+          - gulp
+          - grunt
+          - webpack
+          - rollup
+          - vite
+          - parcel
+          - esbuild
+          - swc
+          - babel
+          - tsc
+          - eslint
+          - prettier
+          - stylelint
+          - husky
+          - lint-staged
+          - commitlint
+          - semantic-release
+          - conventional-changelog
+          - standard-version
+          - release-it
+          - changeset
+          - lerna
+          - nx
+          - rush
+          - bolt
+          - yarn-workspaces
+          - pnpm-workspaces
+      dependencies:
+        type: array
+        description: "List of dependency files or package managers"
+        items:
+          type: string
+          minLength: 1
+      install:
+        $ref: "#/$defs/Operation"
+      test:
+        $ref: "#/$defs/Operation"
+      build:
+        $ref: "#/$defs/Operation"
+    additionalProperties: false
+additionalProperties: false
+$defs:
+  Operation:
+    type: object
+    description: "An operation that can be executed (install, test, build)"
+    properties:
+      fail_fast:
+        type: boolean
+        description: "Whether to stop execution on first failure"
+        default: false
+      env:
+        type: object
+        description: "Environment variables to set for the operation"
+        additionalProperties:
+          type: string
+      steps:
+        type: array
+        description: "List of shell commands to execute"
+        items:
+          type: string
+          minLength: 1
+        minItems: 1
+    additionalProperties: false
