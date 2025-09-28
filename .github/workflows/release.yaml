@@ -5,7 +5,7 @@ on:
     branches:
       - "main"
     paths:
-      - "devops-definition.yaml"
+      - "specs.json"
 
 permissions:
   contents: write
