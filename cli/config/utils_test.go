@@ -13,10 +13,10 @@ import (
 
 func TestGetFilePath(t *testing.T) {
 	tests := []struct {
-		name           string
-		setupFunc      func(t *testing.T) (string, func())
-		expectError    bool
-		expectedPath   string
+		name         string
+		setupFunc    func(t *testing.T) (string, func())
+		expectError  bool
+		expectedPath string
 	}{
 		{
 			name: "file exists in current directory",
@@ -87,11 +87,11 @@ func TestWithTempEnv(t *testing.T) {
 	ctx := logging.WithContext(context.Background(), logger)
 
 	tests := []struct {
-		name           string
-		envVars        map[string]string
-		originalEnv    map[string]string
-		expectedError  bool
-		validateEnv    func(t *testing.T, envVars map[string]string)
+		name            string
+		envVars         map[string]string
+		originalEnv     map[string]string
+		expectedError   bool
+		validateEnv     func(t *testing.T, envVars map[string]string)
 		validateRestore func(t *testing.T)
 	}{
 		{
@@ -115,7 +115,7 @@ func TestWithTempEnv(t *testing.T) {
 		{
 			name: "override existing environment variables",
 			envVars: map[string]string{
-				"PATH": "/custom/path",
+				"PATH":     "/custom/path",
 				"TEST_VAR": "test_value",
 			},
 			originalEnv: map[string]string{
@@ -134,8 +134,8 @@ func TestWithTempEnv(t *testing.T) {
 			},
 		},
 		{
-			name: "empty environment variables map",
-			envVars: map[string]string{},
+			name:        "empty environment variables map",
+			envVars:     map[string]string{},
 			originalEnv: map[string]string{},
 			validateEnv: func(t *testing.T, envVars map[string]string) {
 				// No changes expected
