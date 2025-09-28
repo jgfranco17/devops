@@ -14,14 +14,11 @@ _DevOps, simplified._
 To download the CLI, an install script has been provided.
 
 ```bash
-wget -O - https://raw.githubusercontent.com/jgfranco17/devops/main/install.sh | bash
+go install github.com/jgfranco17/devops@latest
 ```
 
-They always say not to just blindly run scripts from the internet, so feel free to examine
-the file first before running.
-
 > [!NOTE]
-> This CLI is still an alpha prototype.
+> This CLI is still a beta prototype.
 
 ## Testing
 
