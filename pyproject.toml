@@ -1,9 +1,0 @@
-[project]
-name = "devops-actions"
-version = "0.1.0"
-description = "Common GitHub Actions for DevOps operations"
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "pre-commit==3.5.0",
-]

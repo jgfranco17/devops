@@ -16,8 +16,27 @@ permissions:
   pull-requests: read
 
 jobs:
-  release:
+  verify:
+    name: Verify release
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[skip release]') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Run pre-release checks
+        run: |
+          go mod verify
+          go test -v -cover -race ./...
+
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: verify
     if: ${{ !contains(github.event.head_commit.message, '[skip release]') }}
 
     steps:

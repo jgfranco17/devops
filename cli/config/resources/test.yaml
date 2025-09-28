@@ -1,0 +1,13 @@
+name: test-project
+description: A test project
+version: 1.0.0
+repo_url: https://github.com/test/project
+codebase:
+  language: go
+  dependencies: go.mod
+  install:
+    steps:
+      - go mod download
+  build:
+    steps:
+      - go build ./...
