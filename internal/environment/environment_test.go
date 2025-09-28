@@ -2,10 +2,27 @@ package environment
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	actualValues := make(map[string]string)
+	for _, variable := range ciVariables {
+		actualValues[variable] = os.Getenv(variable)
+		os.Unsetenv(variable)
+	}
+	restore := func() {
+		for variable, value := range actualValues {
+			os.Setenv(variable, value)
+		}
+	}
+	defer restore()
+	exitCode := m.Run()
+	os.Exit(exitCode)
+}
 
 func TestIsRunningInCI_CommonCases(t *testing.T) {
 	testCases := []struct {
@@ -141,7 +158,7 @@ func TestIsRunningInCI_CommonCases(t *testing.T) {
 			// Set up test environment using t.Setenv
 			for key, value := range tc.envVars {
 				if value == "" {
-					t.Setenv(key, "") // This unsets the environment variable
+					t.Setenv(key, "")
 				} else {
 					t.Setenv(key, value)
 				}
