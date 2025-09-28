@@ -1,5 +1,5 @@
 ---
-name: CI/CD
+name: Main Pipeline
 
 on:
   push:
@@ -10,12 +10,37 @@ on:
       - main
 
 jobs:
+  lint:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Install linters
+        run: |
+          pip install --upgrade pip
+          pip install pre-commit==3.5.0
+
+      - name: Install dependencies
+        run: |
+          just tidy
+          go install golang.org/x/tools/cmd/goimports@latest
+          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+
+      - name: Run linters
+        run: pre-commit run --all-files
+
   test:
     name: Run unit tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run setup
         uses: ./.github/actions/setup-workspace
@@ -31,7 +56,7 @@ jobs:
     needs: test
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run setup
         uses: ./.github/actions/setup-workspace
