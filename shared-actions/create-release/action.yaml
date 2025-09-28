@@ -16,14 +16,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Set up GitHub CLI
-      if: steps.check_version.outputs.should_release == 'true'
-      shell: bash
-      run: |
-        sudo apt update
-        sudo apt install gh -y
-        gh --version
-
     - name: Read version from spec file
       shell: bash
       id: read_version
@@ -103,6 +95,14 @@ runs:
 
         echo "should_release=true" >> $GITHUB_OUTPUT
         echo "✅ Version validation passed: $PREVIOUS_TAG → $SPEC_VERSION"
+
+    - name: Set up GitHub CLI
+      if: steps.check_version.outputs.should_release == 'true'
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install gh -y
+        gh --version
 
     - name: Generate changelog
       shell: bash
