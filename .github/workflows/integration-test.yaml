@@ -5,6 +5,9 @@ name: Integration Test
   pull_request:
     branches:
       - main
+    paths:
+      - "integration/**"
+      - "**/*.go"
   push:
     branches:
       - main

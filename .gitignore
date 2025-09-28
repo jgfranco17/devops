@@ -15,6 +15,9 @@ htmlcov/
 # Virtual environments
 *venv
 
+# Documentation
+site/
+
 # Local development
 .vscode
 .idea
