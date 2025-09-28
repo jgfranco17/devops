@@ -439,3 +439,353 @@ func TestOperation_Run_OutputHandling(t *testing.T) {
 	assert.NoError(t, err)
 	mockExecutor.AssertExpectations(t)
 }
+
+func TestProjectDefinition_Validate(t *testing.T) {
+	tests := []struct {
+		name           string
+		project        ProjectDefinition
+		expectedError  string
+		expectWarnings bool
+		outputChecks   []string // strings that should be present in output
+	}{
+		{
+			name: "complete valid configuration",
+			project: ProjectDefinition{
+				Name:        "test-project",
+				Description: "A test project",
+				Version:     "1.0.0",
+				RepoUrl:     "https://github.com/test/project",
+				Codebase: Codebase{
+					Language:     "go",
+					Dependencies: []string{"github.com/stretchr/testify"},
+					Install: Operation{
+						Steps: []string{"go mod download"},
+					},
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+					Build: Operation{
+						Steps: []string{"go build ./..."},
+					},
+				},
+			},
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[✔] Dependencies:",
+				"[✔] Install steps (1)",
+				"[✔] Test steps (1)",
+				"[✔] Build steps (1)",
+			},
+		},
+		{
+			name: "missing language should fail",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+					Build: Operation{
+						Steps: []string{"go build ./..."},
+					},
+				},
+			},
+			expectedError: "found 1 required fixes",
+			outputChecks: []string{
+				"[✘] Language is required",
+				"Fixes:",
+				"Set a language in the codebase",
+			},
+		},
+		{
+			name: "empty language should fail",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language: "",
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+					Build: Operation{
+						Steps: []string{"go build ./..."},
+					},
+				},
+			},
+			expectedError: "found 1 required fixes",
+			outputChecks: []string{
+				"[✘] Language is required",
+			},
+		},
+		{
+			name: "missing dependencies should warn but pass",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language: "go",
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+					Build: Operation{
+						Steps: []string{"go build ./..."},
+					},
+				},
+			},
+			expectWarnings: true,
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[~] No dependencies defined",
+				"[✔] Test steps (1)",
+				"[✔] Build steps (1)",
+				"Suggestions:",
+				"Set dependencies in the codebase",
+			},
+		},
+		{
+			name: "missing test steps should warn but pass",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language:     "go",
+					Dependencies: []string{"github.com/stretchr/testify"},
+					Build: Operation{
+						Steps: []string{"go build ./..."},
+					},
+				},
+			},
+			expectWarnings: true,
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[✔] Dependencies:",
+				"[~] No test steps defined",
+				"[✔] Build steps (1)",
+				"Suggestions:",
+				"Set test steps in the codebase",
+			},
+		},
+		{
+			name: "missing build steps should warn but pass",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language:     "go",
+					Dependencies: []string{"github.com/stretchr/testify"},
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+				},
+			},
+			expectWarnings: true,
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[✔] Dependencies:",
+				"[✔] Test steps (1)",
+				"[~] No build steps defined",
+				"Suggestions:",
+				"Set build steps in the codebase",
+			},
+		},
+		{
+			name: "missing install steps should not warn (optional)",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language:     "go",
+					Dependencies: []string{"github.com/stretchr/testify"},
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+					Build: Operation{
+						Steps: []string{"go build ./..."},
+					},
+				},
+			},
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[✔] Dependencies:",
+				"[✔] Test steps (1)",
+				"[✔] Build steps (1)",
+			},
+		},
+		{
+			name: "minimal valid configuration with only language",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language: "go",
+				},
+			},
+			expectWarnings: true,
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[~] No dependencies defined",
+				"[~] No test steps defined",
+				"[~] No build steps defined",
+				"Suggestions:",
+			},
+		},
+		{
+			name: "multiple warnings should be grouped",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language: "go",
+				},
+			},
+			expectWarnings: true,
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[~] No dependencies defined",
+				"[~] No test steps defined",
+				"[~] No build steps defined",
+				"Suggestions:",
+				"Set dependencies in the codebase",
+				"Set test steps in the codebase",
+				"Set build steps in the codebase",
+			},
+		},
+		{
+			name: "nil dependencies should not cause issues",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language:     "go",
+					Dependencies: nil,
+					Test: Operation{
+						Steps: []string{"go test ./..."},
+					},
+					Build: Operation{
+						Steps: []string{"go build ./..."},
+					},
+				},
+			},
+			expectWarnings: true,
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[~] No dependencies defined",
+				"[✔] Test steps (1)",
+				"[✔] Build steps (1)",
+			},
+		},
+		{
+			name: "nil steps should not cause issues",
+			project: ProjectDefinition{
+				Name: "test-project",
+				Codebase: Codebase{
+					Language:     "go",
+					Dependencies: []string{"github.com/stretchr/testify"},
+					Install: Operation{
+						Steps: nil,
+					},
+					Test: Operation{
+						Steps: nil,
+					},
+					Build: Operation{
+						Steps: nil,
+					},
+				},
+			},
+			expectWarnings: true,
+			outputChecks: []string{
+				"[✔] Language: go",
+				"[✔] Dependencies:",
+				"[~] No test steps defined",
+				"[~] No build steps defined",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Capture output using a buffer
+			var buf bytes.Buffer
+			logger := logging.New(os.Stderr, logrus.InfoLevel)
+			ctx := logging.WithContext(context.Background(), logger)
+
+			err := tt.project.ValidateTo(ctx, &buf)
+
+			output := buf.String()
+
+			// Check expected error
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			// Check for warning indicators
+			if tt.expectWarnings {
+				assert.Contains(t, output, "[~]")
+			}
+
+			// Check specific output content
+			for _, check := range tt.outputChecks {
+				assert.Contains(t, output, check, "Expected output to contain: %s", check)
+			}
+
+			// Verify terminal line separator is present
+			assert.Contains(t, output, "=")
+		})
+	}
+}
+
+func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
+	t.Run("validation with empty project definition", func(t *testing.T) {
+		var buf bytes.Buffer
+		logger := logging.New(os.Stderr, logrus.InfoLevel)
+		ctx := logging.WithContext(context.Background(), logger)
+
+		project := ProjectDefinition{}
+		err := project.ValidateTo(ctx, &buf)
+
+		output := buf.String()
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "found 1 required fixes")
+		assert.Contains(t, output, "[✘] Language is required")
+	})
+
+	t.Run("validation with whitespace language should pass", func(t *testing.T) {
+		var buf bytes.Buffer
+		logger := logging.New(os.Stderr, logrus.InfoLevel)
+		ctx := logging.WithContext(context.Background(), logger)
+
+		project := ProjectDefinition{
+			Name: "test-project",
+			Codebase: Codebase{
+				Language: "   ", // whitespace only
+			},
+		}
+		err := project.ValidateTo(ctx, &buf)
+
+		output := buf.String()
+
+		assert.NoError(t, err)
+		assert.Contains(t, output, "[✔] Language:    ") // Should show the whitespace
+	})
+
+	t.Run("validation with complex dependencies", func(t *testing.T) {
+		var buf bytes.Buffer
+		logger := logging.New(os.Stderr, logrus.InfoLevel)
+		ctx := logging.WithContext(context.Background(), logger)
+
+		project := ProjectDefinition{
+			Name: "test-project",
+			Codebase: Codebase{
+				Language: "go",
+				Dependencies: []string{
+					"github.com/stretchr/testify",
+					"github.com/spf13/cobra",
+					"github.com/sirupsen/logrus",
+				},
+			},
+		}
+		err := project.ValidateTo(ctx, &buf)
+
+		output := buf.String()
+
+		assert.NoError(t, err)
+		assert.Contains(t, output, "[✔] Language: go")
+		assert.Contains(t, output, "[✔] Dependencies:")
+	})
+}

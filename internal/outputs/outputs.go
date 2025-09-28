@@ -2,6 +2,7 @@ package outputs
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -10,6 +11,10 @@ import (
 )
 
 func PrintColoredMessage(textColor string, message string, args ...any) {
+	PrintColoredMessageTo(os.Stdout, textColor, message, args...)
+}
+
+func PrintColoredMessageTo(w io.Writer, textColor string, message string, args ...any) {
 	var selectedColor color.Attribute
 	switch strings.ToLower(textColor) {
 	case "green":
@@ -27,10 +32,14 @@ func PrintColoredMessage(textColor string, message string, args ...any) {
 	}
 	colorFunc := color.New(selectedColor).SprintFunc()
 	fullMessage := fmt.Sprintf(message, args...)
-	fmt.Printf("%s\n", colorFunc(fullMessage))
+	fmt.Fprintf(w, "%s\n", colorFunc(fullMessage))
 }
 
 func PrintTerminalWideLine(char string) {
+	PrintTerminalWideLineTo(os.Stdout, char)
+}
+
+func PrintTerminalWideLineTo(w io.Writer, char string) {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		// fallback to default width
@@ -40,5 +49,5 @@ func PrintTerminalWideLine(char string) {
 	for i := 0; i < width; i++ {
 		line += string(char)
 	}
-	fmt.Println(line)
+	fmt.Fprintln(w, line)
 }

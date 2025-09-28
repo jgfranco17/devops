@@ -37,6 +37,7 @@ func main() {
 	commandsList := []*cobra.Command{
 		core.GetBuildCommand(executor),
 		core.GetTestCommand(executor),
+		core.GetDoctorCommand(executor),
 	}
 	command.RegisterCommands(commandsList)
 

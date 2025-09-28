@@ -5,7 +5,8 @@ repo_url: https://github.com/jgfranco17/devops
 
 codebase:
   language: go
-  dependencies: go.mod
+  dependencies:
+    - go.mod
   install:
     fail_fast: true
     env:

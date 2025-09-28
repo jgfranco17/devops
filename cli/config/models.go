@@ -28,6 +28,66 @@ type ProjectDefinition struct {
 	Codebase    Codebase `yaml:"codebase"`
 }
 
+func (d *ProjectDefinition) Validate(ctx context.Context) error {
+	return d.ValidateTo(ctx, os.Stdout)
+}
+
+func (d *ProjectDefinition) ValidateTo(ctx context.Context, w io.Writer) error {
+	logger := logging.FromContext(ctx)
+	fixes := []string{}
+	suggestions := []string{}
+
+	if d.Codebase.Language == "" {
+		outputs.PrintColoredMessageTo(w, "red", "[✘] Language is required")
+		fixes = append(fixes, "Set a language in the codebase")
+	} else {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] Language: %s", d.Codebase.Language)
+	}
+
+	if d.Codebase.Dependencies != nil {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] Dependencies: %s", d.Codebase.Dependencies)
+	} else {
+		outputs.PrintColoredMessageTo(w, "yellow", "[~] No dependencies defined")
+		suggestions = append(suggestions, "Set dependencies in the codebase")
+	}
+
+	if d.Codebase.Install.Steps != nil {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] Install steps (%d)", len(d.Codebase.Install.Steps))
+	}
+
+	if d.Codebase.Test.Steps != nil {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] Test steps (%d)", len(d.Codebase.Test.Steps))
+	} else {
+		outputs.PrintColoredMessageTo(w, "yellow", "[~] No test steps defined")
+		suggestions = append(suggestions, "Set test steps in the codebase")
+	}
+
+	if d.Codebase.Build.Steps != nil {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] Build steps (%d)", len(d.Codebase.Build.Steps))
+	} else {
+		outputs.PrintColoredMessageTo(w, "yellow", "[~] No build steps defined")
+		suggestions = append(suggestions, "Set build steps in the codebase")
+	}
+
+	outputs.PrintTerminalWideLineTo(w, "=")
+	if len(suggestions) > 0 {
+		outputs.PrintColoredMessageTo(w, "yellow", "Suggestions:")
+		for _, suggestion := range suggestions {
+			outputs.PrintColoredMessageTo(w, "yellow", "  - %s", suggestion)
+		}
+	}
+	if len(fixes) > 0 {
+		outputs.PrintColoredMessageTo(w, "red", "Fixes:")
+		for _, fix := range fixes {
+			outputs.PrintColoredMessageTo(w, "red", "  - %s", fix)
+		}
+		return fmt.Errorf("found %d required fixes", len(fixes))
+	}
+
+	logger.Info("Project definition validated successfully")
+	return nil
+}
+
 func (d *ProjectDefinition) Test(ctx context.Context, shellExecutor ShellExecutor) error {
 	logger := logging.FromContext(ctx)
 	if len(d.Codebase.Test.Steps) == 0 {
