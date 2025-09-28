@@ -24,6 +24,7 @@ theme:
   nav:
     - Home: index.md
     - Requirements: requirements.md
+    - Usage Guide: cli/devops.md
   features:
     - announce.dismiss
     - content.code.annotate
