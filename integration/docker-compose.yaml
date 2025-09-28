@@ -1,0 +1,8 @@
+# Integration test Docker suite
+services:
+  devops:
+    container_name: devops
+    image: devops:latest
+    build:
+      context: ..
+      dockerfile: integration/Dockerfile

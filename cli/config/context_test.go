@@ -13,7 +13,7 @@ func TestWithContext(t *testing.T) {
 		definition ProjectDefinition
 	}{
 		{
-			name: "empty project definition",
+			name:       "empty project definition",
 			definition: ProjectDefinition{},
 		},
 		{
@@ -25,7 +25,7 @@ func TestWithContext(t *testing.T) {
 				RepoUrl:     "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
-					Dependencies: "go.mod",
+					Dependencies: []string{"go.mod"},
 					Install: Operation{
 						Steps: []string{"go mod download"},
 					},

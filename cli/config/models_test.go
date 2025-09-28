@@ -244,7 +244,7 @@ version: 1.0.0
 repo_url: https://github.com/test/project
 codebase:
   language: go
-  dependencies: go.mod
+  dependencies: [go.mod]
   install:
     steps:
       - go mod download
@@ -259,7 +259,7 @@ codebase:
 				assert.Equal(t, "1.0.0", cfg.Version)
 				assert.Equal(t, "https://github.com/test/project", cfg.RepoUrl)
 				assert.Equal(t, "go", cfg.Codebase.Language)
-				assert.Equal(t, "go.mod", cfg.Codebase.Dependencies)
+				assert.Equal(t, []string{"go.mod"}, cfg.Codebase.Dependencies)
 				assert.Len(t, cfg.Codebase.Install.Steps, 1)
 				assert.Len(t, cfg.Codebase.Build.Steps, 1)
 			},
@@ -273,7 +273,7 @@ version: 1.0.0
 repo_url: https://github.com/test/project
 codebase:
   language: go
-  dependencies: go.mod
+  dependencies: [go.mod]
   install:
     steps:
       - go mod download

@@ -1,0 +1,49 @@
+# INTEGRATION TEST SCRIPTS
+
+CAPTURE_OUTPUT_FILE := "output.txt"
+
+_default:
+    @just --list --unsorted
+
+##########################################################
+# TEST WORKSPACE SETUP
+##########################################################
+
+# Build the services in Docker
+build:
+	docker compose build
+
+# Workspace teardown
+clean:
+	-docker compose down
+	-rm {{ CAPTURE_OUTPUT_FILE }}
+
+##########################################################
+# INTERACTIVE COMMANDS
+##########################################################
+
+# Run the CLI image with envs
+devops *args:
+    @docker compose run \
+        --remove-orphans --rm \
+        devops {{ args }}
+
+# Run the CLI image and capture the output to file
+devops-capture *args:
+    just devops {{ args }} 2>&1 | tee {{ CAPTURE_OUTPUT_FILE }}
+
+# Check the output file for a specific substring
+check-content substring:
+    @grep -n "{{ substring }}" {{ CAPTURE_OUTPUT_FILE }}
+
+##########################################################
+# TEST EXECUTION
+##########################################################
+
+# Run the full test suite
+test-all: test-base
+    @echo "DevOps CLI integration test completed!"
+
+test-base:
+    @just devops --version | grep -n "devops"
+    @just devops --help 2>&1 | grep -n "devops"

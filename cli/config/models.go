@@ -72,7 +72,7 @@ func Load(r io.Reader) (*ProjectDefinition, error) {
 
 type Codebase struct {
 	Language     string    `yaml:"language"`
-	Dependencies string    `yaml:"dependencies,omitempty"`
+	Dependencies []string  `yaml:"dependencies,omitempty"`
 	Install      Operation `yaml:"install,omitempty"`
 	Test         Operation `yaml:"test,omitempty"`
 	Build        Operation `yaml:"build,omitempty"`

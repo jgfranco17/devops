@@ -1,0 +1,17 @@
+name: devops-common
+description: DevOps CLI - Simplifying your CI/CD pipelines
+version: 0.0.2
+repo_url: https://github.com/jgfranco17/devops
+
+codebase:
+  language: bash
+  test:
+    fail_fast: true
+    steps:
+      - echo "Tests completed successfully"
+  build:
+    fail_fast: true
+    env:
+      FOO: BAR
+    steps:
+      - echo "Build completed successfully with $FOO"
