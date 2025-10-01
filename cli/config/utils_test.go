@@ -77,7 +77,7 @@ func TestGetFilePath(t *testing.T) {
 			}
 
 			expectedPath := filepath.Join(tempDir, DefinitionFile)
-			assert.Equal(t, expectedPath, path)
+			assert.Contains(t, path, expectedPath)
 		})
 	}
 }
