@@ -71,9 +71,3 @@ jobs:
       - name: Run binary
         run: |
           ./devops --help
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: devops-linux-amd64
-          path: ./devops

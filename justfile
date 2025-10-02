@@ -1,3 +1,7 @@
+# Devops: Development scripts
+
+INSTALL_PATH := "$HOME/.local"
+
 # Default command
 _default:
     @just --list --unsorted
@@ -20,9 +24,42 @@ test:
 # Build the binary
 build:
     #!/usr/bin/env bash
+    # Detect OS and architecture
+    case "$(uname -s)" in
+        Linux*) OS="linux" ;;
+        Darwin*) OS="darwin" ;;
+        *) echo "Error: Unsupported OS (${OS})"; exit 1 ;;
+    esac
+    case "$(uname -m)" in
+        x86_64) ARCH="amd64" ;;
+        aarch64) ARCH="arm64" ;;
+        arm64) ARCH="arm64" ;;
+        *) echo "Error: Unsupported architecture (${ENV_ARCH})"; exit 1 ;;
+    esac
+
+    echo "Building devops for ${OS}/${ARCH}..."
     go mod download all
-    CGO_ENABLED=0 GOOS=linux go build -o ./devops .
+    CGO_ENABLED=0 GOOS="${OS}" GOARCH="${ARCH}" go build -o ./devops .
     echo "Built binary for devops successfully!"
+
+# Install the binary locally
+install-local: build
+    #!/usr/bin/env bash
+    set -eux
+    echo "Installing devops locally..."
+    BIN_PATH="{{ INSTALL_PATH }}/bin/devops"
+    cp ./devops "${BIN_PATH}"
+    chmod +x "${BIN_PATH}"
+    echo "Installed devops locally!"
+
+# Remove the local binary
+uninstall-local:
+    #!/usr/bin/env bash
+    set -eux
+    echo "Uninstalling devops..."
+    BIN_PATH="{{ INSTALL_PATH }}/bin/devops"
+    rm "${BIN_PATH}"
+    echo "Uninstalled devops!"
 
 # Update the project dependencies
 update-deps:
