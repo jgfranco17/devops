@@ -148,6 +148,16 @@ runs:
           --notes "${{ steps.changelog.outputs.changelog }}" \
           --latest
 
+    - name: Release
+      if: steps.check_version.outputs.should_release == 'true'
+      uses: goreleaser/goreleaser-action@v6
+      with:
+        distribution: goreleaser
+        version: "latest"
+        args: release --clean
+      env:
+        GITHUB_TOKEN: ${{ inputs.git-token }}
+
     - name: Skip release notification
       shell: bash
       if: steps.check_version.outputs.should_release == 'false'
