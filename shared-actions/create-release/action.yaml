@@ -130,6 +130,8 @@ runs:
     - name: Create tag
       shell: bash
       if: steps.check_version.outputs.should_release == 'true'
+      env:
+        GITHUB_TOKEN: ${{ inputs.git-token }}
       run: |
         SPEC_VERSION="${{ steps.read_version.outputs.version }}"
         git config user.name "github-actions[bot]"
@@ -147,6 +149,31 @@ runs:
           --title "${{ steps.read_version.outputs.version }}" \
           --notes "${{ steps.changelog.outputs.changelog }}" \
           --latest
+
+    - name: Check for GoReleaser config
+      shell: bash
+      id: check_goreleaser
+      if: steps.check_version.outputs.should_release == 'true'
+      run: |
+        # Check for common GoReleaser config file names
+        if [ -f ".goreleaser.yml" ] || [ -f ".goreleaser.yaml" ] || [ -f "goreleaser.yml" ] || [ -f "goreleaser.yaml" ]; then
+          echo "✅ GoReleaser configuration found"
+          echo "has_config=true" >> $GITHUB_OUTPUT
+        else
+          echo "No GoReleaser configuration found, skipping artifact publishing"
+          echo "has_config=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Publish artifacts with GoReleaser
+      id: goreleaser-publish
+      if: steps.check_version.outputs.should_release == 'true' && steps.check_goreleaser.outputs.has_config == 'true'
+      uses: goreleaser/goreleaser-action@v6
+      with:
+        distribution: goreleaser
+        version: "latest"
+        args: release --clean
+      env:
+        GITHUB_TOKEN: ${{ inputs.git-token }}
 
     - name: Skip release notification
       shell: bash
