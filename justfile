@@ -15,11 +15,19 @@ tidy:
 devops *args:
     @go run . {{ args }}
 
-# Run all BDD tests
+# Start the API server
+start:
+    @echo "Starting API server..."
+    @uv run python app.py
+
+# Run Go tests
 test:
-    @echo "Running unit tests!"
     go clean -testcache
     go test -cover ./...
+
+# Run Python tests
+pytest *args:
+    uv run pytest {{ args }}
 
 # Build the binary
 build:
@@ -71,3 +79,11 @@ update-deps:
 docs:
     mkdocs build --strict --clean
     mkdocs serve --open
+
+# Run linters
+lint:
+    @echo "Running linters..."
+    uv run flake8 .
+    uv run black --check .
+    uv run isort --check-only .
+    uv run mypy .
