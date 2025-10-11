@@ -2,15 +2,14 @@ import logging
 import time
 from http import HTTPStatus
 
+import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
 
 from backend.core.config.env import load_environment
 from backend.core.obs.logging import setup_logger
 from backend.core.utils.types import JsonResponse
-
 
 logger = logging.getLogger(__name__)
 config = load_environment()
@@ -21,7 +20,7 @@ app = FastAPI(
     contact={
         "name": "Chino Franco",
         "email": "chino.franco@gmail.com",
-        "github": "https://github.com/jgfranco17"
+        "github": "https://github.com/jgfranco17",
     },
 )
 startup_time = time.time()
@@ -33,7 +32,7 @@ def root():
     return {
         "message": f"Welcome to the {config.app_name}!",
         "version": config.app_version,
-        "debug": config.debug
+        "debug": config.debug,
     }
 
 
@@ -90,5 +89,5 @@ def start():
         host=config.host,
         port=config.port,
         reload=config.reload,
-        log_level=config.log_level.lower()
+        log_level=config.log_level.lower(),
     )

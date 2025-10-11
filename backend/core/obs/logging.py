@@ -23,5 +23,9 @@ def setup_logger():
     base_log_level = logging.INFO
     if level_from_env := os.getenv(LOG_LEVEL):
         base_log_level = levels.get(level_from_env.upper(), base_log_level)
-    logging.basicConfig(format=LOG_FORMAT, datefmt=TIMESTAMP_FORMAT, level=base_log_level)
-    logger.debug(f"Logging initialized with level: {logging.getLevelName(base_log_level)}")
+    logging.basicConfig(
+        format=LOG_FORMAT, datefmt=TIMESTAMP_FORMAT, level=base_log_level
+    )
+    logger.debug(
+        f"Logging initialized with level: {logging.getLevelName(base_log_level)}"
+    )

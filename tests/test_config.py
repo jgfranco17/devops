@@ -52,7 +52,9 @@ def test_config_bool_parsing_true(monkeypatch: MonkeyPatch, value: str):
     assert test_config.debug is True, f"Value '{value}' evaluated to False"
 
 
-@pytest.mark.parametrize("value", ["false", "False", "FALSE", "0", "f", "no", "n", "off", ""])
+@pytest.mark.parametrize(
+    "value", ["false", "False", "FALSE", "0", "f", "no", "n", "off", ""]
+)
 def test_config_bool_parsing_false(monkeypatch: MonkeyPatch, value: str):
     """Test boolean parsing from environment variables (falsy)."""
     monkeypatch.setenv("DEBUG", value)

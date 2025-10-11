@@ -1,5 +1,6 @@
 import logging
 import os
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ class Config(BaseModel):
     @classmethod
     def from_env(cls) -> "Config":
         """Create a Config instance from environment variables."""
+
         def parse_bool(value: str) -> bool:
             """Parse a string as a boolean."""
             return value.lower() in ("true", "1", "t", "yes", "y", "on")
