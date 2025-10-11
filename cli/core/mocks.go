@@ -17,7 +17,7 @@ type MockExpectedInput struct {
 }
 
 func (e *UnexpectedCommandError) Error() string {
-	return fmt.Sprintf("Unexpeced command: wanted %s but got %s", e.Want, e.Got)
+	return fmt.Sprintf("Unexpected command: wanted %s but got %s", e.Want, e.Got)
 }
 
 type MockExecutor struct {

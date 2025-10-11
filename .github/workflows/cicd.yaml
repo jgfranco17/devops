@@ -35,7 +35,7 @@ jobs:
           go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
 
       - name: Run linters
-        run: pre-commit run --all-files
+        run: pre-commit run --all-files --verbose
 
   test:
     name: Run unit tests
@@ -47,10 +47,14 @@ jobs:
       - name: Run setup
         uses: ./.github/actions/setup-workspace
 
-      - name: Run tests
+      - name: Run Go tests
         run: |
           go clean -testcache
           go test -v -cover -race ./...
+
+      - name: Run Python tests
+        run: |
+          uv run pytest -vv
 
   build:
     name: Build
