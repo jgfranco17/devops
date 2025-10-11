@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"time"
+	"unicode"
 
 	"github.com/jgfranco17/dev-tooling-go/logging"
 	"github.com/jgfranco17/devops/cli/executor"
@@ -21,9 +23,10 @@ type ShellExecutor interface {
 }
 
 type ProjectDefinition struct {
-	Name        string   `yaml:"name"`
-	Description string   `yaml:"description,omitempty"`
+	ID          string   `yaml:"id"`
+	Name        string   `yaml:"name,omitempty"`
 	Version     string   `yaml:"version"`
+	Description string   `yaml:"description,omitempty"`
 	RepoUrl     string   `yaml:"repo_url"`
 	Codebase    Codebase `yaml:"codebase"`
 }
@@ -37,6 +40,20 @@ func (d *ProjectDefinition) ValidateTo(ctx context.Context, w io.Writer) error {
 	fixes := []string{}
 	suggestions := []string{}
 
+	if d.ID == "" {
+		outputs.PrintColoredMessageTo(w, "red", "[✘] ID is required")
+		fixes = append(fixes, "Set an ID for the project")
+	} else if err := validateProjectName(d.ID); err != nil {
+		outputs.PrintColoredMessageTo(w, "red", "[✘] Invalid ID: %s", err.Error())
+		fixes = append(fixes, "Use a valid project ID (alphanumeric/dashes/underscores, starts with letter, no whitespace, under 30 chars)")
+	} else {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] ID: %s", d.ID)
+	}
+
+	if d.Name != "" {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] Name: %s", d.Name)
+	}
+
 	if d.Codebase.Language == "" {
 		outputs.PrintColoredMessageTo(w, "red", "[✘] Language is required")
 		fixes = append(fixes, "Set a language in the codebase")
@@ -48,7 +65,6 @@ func (d *ProjectDefinition) ValidateTo(ctx context.Context, w io.Writer) error {
 		outputs.PrintColoredMessageTo(w, "green", "[✔] Dependencies: %s", d.Codebase.Dependencies)
 	} else {
 		outputs.PrintColoredMessageTo(w, "yellow", "[~] No dependencies defined")
-		suggestions = append(suggestions, "Set dependencies in the codebase")
 	}
 
 	if d.Codebase.Install.Steps != nil {
@@ -180,5 +196,41 @@ func (op *Operation) Run(ctx context.Context, executor ShellExecutor) error {
 	if len(failedSteps) > 0 {
 		return fmt.Errorf("failed to run steps: %v", failedSteps)
 	}
+	return nil
+}
+
+// validateProjectName validates that the project ID meets the specified criteria:
+// - Contains only alphanumeric characters, dashes, and underscores
+// - Starts with a letter
+// - Contains no whitespace
+// - Is under 30 characters
+func validateProjectName(id string) error {
+	if len(id) >= 30 {
+		return fmt.Errorf("ID must be under 30 characters (current: %d)", len(id))
+	}
+
+	if id == "" {
+		return fmt.Errorf("ID cannot be empty")
+	}
+
+	// Check if first character is a letter
+	firstRune := rune(id[0])
+	if !unicode.IsLetter(firstRune) {
+		return fmt.Errorf("ID must start with a letter")
+	}
+
+	// Check for whitespace
+	for _, r := range id {
+		if unicode.IsSpace(r) {
+			return fmt.Errorf("ID cannot contain whitespace")
+		}
+	}
+
+	// Check that all characters are alphanumeric, dash, or underscore
+	validNamePattern := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
+	if !validNamePattern.MatchString(id) {
+		return fmt.Errorf("ID can only contain letters, numbers, dashes, and underscores")
+	}
+
 	return nil
 }
