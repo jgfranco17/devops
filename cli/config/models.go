@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -20,6 +21,13 @@ import (
 type ShellExecutor interface {
 	Exec(ctx context.Context, command string) (executor.Result, error)
 	AddEnv(env []string)
+}
+
+type Manifest struct {
+	ID           string   `json:"id"`
+	Version      string   `yaml:"version"`
+	RepoUrl      string   `json:"repo_url,omitempty"`
+	Dependencies []string `json:"dependencies,omitempty"`
 }
 
 type ProjectDefinition struct {
@@ -52,6 +60,13 @@ func (d *ProjectDefinition) ValidateTo(ctx context.Context, w io.Writer) error {
 
 	if d.Name != "" {
 		outputs.PrintColoredMessageTo(w, "green", "[✔] Name: %s", d.Name)
+	}
+
+	if d.RepoUrl == "" {
+		outputs.PrintColoredMessageTo(w, "red", "[✘] Repository URL is required")
+		fixes = append(fixes, "Set a repository URL for the project")
+	} else {
+		outputs.PrintColoredMessageTo(w, "green", "[✔] Repository URL: %s", d.RepoUrl)
 	}
 
 	if d.Codebase.Language == "" {
@@ -144,6 +159,19 @@ func Load(r io.Reader) (*ProjectDefinition, error) {
 		return nil, fmt.Errorf("failed to decode YAML: %w", err)
 	}
 	return &cfg, nil
+}
+
+func (d *ProjectDefinition) GenerateManifest() ([]byte, error) {
+	manifest := Manifest{
+		ID:           d.ID,
+		Version:      d.Version,
+		Dependencies: d.Codebase.Dependencies,
+	}
+	data, err := json.MarshalIndent(&manifest, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to write manifest: %w", err)
+	}
+	return data, nil
 }
 
 type Codebase struct {

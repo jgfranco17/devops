@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/jgfranco17/dev-tooling-go/logging"
 	"github.com/jgfranco17/devops/cli/config"
 	"github.com/jgfranco17/devops/cli/executor"
 	"github.com/jgfranco17/devops/internal/doc"
@@ -76,6 +79,44 @@ func GetDoctorCommand(shellExecutor BashExecutor) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
+	return cmd
+}
+
+func GetManifestCommand() *cobra.Command {
+	var outputFile string
+	cmd := &cobra.Command{
+		Use:   "manifest",
+		Short: "Generate a manifest file",
+		Long:  "Generate a manifest file for the project.",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			cfg := config.FromContext(ctx)
+			logger := logging.FromContext(ctx)
+
+			manifest, err := cfg.GenerateManifest()
+			if err != nil {
+				return fmt.Errorf("failed to generate manifest: %w", err)
+			}
+			logger.Debug("Generated manifest content")
+
+			dir := filepath.Dir(outputFile)
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				return fmt.Errorf("failed to create directory %s: %w", dir, err)
+			}
+			if err := os.WriteFile(outputFile, manifest, 0644); err != nil {
+				return fmt.Errorf("failed to write manifest to file %s: %w", outputFile, err)
+			}
+
+			logger.WithFields(logrus.Fields{
+				"path": outputFile,
+			}).Info("Manifest generated successfully")
+			return nil
+		},
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+	cmd.Flags().StringVarP(&outputFile, "output", "o", ".devops/manifest.json", "Output file path")
 	return cmd
 }
 

@@ -7,7 +7,7 @@ repo_url: https://github.com/jgfranco17/devops
 codebase:
   language: go
   dependencies:
-    - go.mod
+    - https://github.com/jgfranco17/dev-tooling-go
   install:
     fail_fast: true
     env:
