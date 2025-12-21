@@ -25,7 +25,7 @@ type ShellExecutor interface {
 
 type Manifest struct {
 	ID           string   `json:"id"`
-	Version      string   `yaml:"version"`
+	Version      string   `json:"version"`
 	RepoUrl      string   `json:"repo_url,omitempty"`
 	Dependencies []string `json:"dependencies,omitempty"`
 }
