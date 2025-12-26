@@ -480,7 +480,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "missing language should fail",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Test: Operation{
@@ -501,7 +501,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "empty language should fail",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "",
@@ -521,7 +521,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "missing dependencies should warn but pass",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
@@ -544,7 +544,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "missing test steps should warn but pass",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
@@ -567,7 +567,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "missing build steps should warn but pass",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
@@ -590,7 +590,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "missing install steps should not warn (optional)",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
@@ -613,7 +613,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "minimal valid configuration with only language",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
@@ -631,7 +631,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "multiple warnings should be grouped",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
@@ -651,7 +651,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "nil dependencies should not cause issues",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
@@ -675,7 +675,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "nil steps should not cause issues",
 			project: ProjectDefinition{
-				ID: "test-project",
+				ID:      "test-project",
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
@@ -920,7 +920,7 @@ func TestProjectDefinition_ValidateNameIntegration(t *testing.T) {
 			ctx := logging.WithContext(context.Background(), logger)
 
 			project := ProjectDefinition{
-				ID: tt.projectName,
+				ID:      tt.projectName,
 				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go", // Valid language to focus on name validation
@@ -967,7 +967,7 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		ctx := logging.WithContext(context.Background(), logger)
 
 		project := ProjectDefinition{
-			ID: "test-project",
+			ID:      "test-project",
 			RepoUrl: "https://github.com/test/project",
 			Codebase: Codebase{
 				Language: "   ", // whitespace only
@@ -988,7 +988,7 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		ctx := logging.WithContext(context.Background(), logger)
 
 		project := ProjectDefinition{
-			ID: "test-project",
+			ID:      "test-project",
 			RepoUrl: "https://github.com/test/project",
 			Codebase: Codebase{
 				Language: "go",
