@@ -19,7 +19,7 @@ func TestWithContext(t *testing.T) {
 		{
 			name: "complete project definition",
 			definition: ProjectDefinition{
-				Name:        "test-project",
+				ID:          "test-project",
 				Description: "A test project",
 				Version:     "1.0.0",
 				RepoUrl:     "https://github.com/test/project",
@@ -38,7 +38,7 @@ func TestWithContext(t *testing.T) {
 		{
 			name: "project with nested operations",
 			definition: ProjectDefinition{
-				Name: "complex-project",
+				ID: "complex-project",
 				Codebase: Codebase{
 					Language: "python",
 					Install: Operation{
@@ -86,14 +86,14 @@ func TestFromContext(t *testing.T) {
 			name: "context with valid project definition",
 			setupCtx: func() context.Context {
 				definition := ProjectDefinition{
-					Name:    "test-project",
+					ID:      "test-project",
 					Version: "1.0.0",
 				}
 				return WithContext(context.Background(), definition)
 			},
 			expectPanic: false,
 			expected: ProjectDefinition{
-				Name:    "test-project",
+				ID:      "test-project",
 				Version: "1.0.0",
 			},
 		},
@@ -124,7 +124,7 @@ func TestFromContext(t *testing.T) {
 			name: "nested context with project definition",
 			setupCtx: func() context.Context {
 				definition := ProjectDefinition{
-					Name: "nested-project",
+					ID: "nested-project",
 					Codebase: Codebase{
 						Language: "rust",
 					},
@@ -136,7 +136,7 @@ func TestFromContext(t *testing.T) {
 			},
 			expectPanic: false,
 			expected: ProjectDefinition{
-				Name: "nested-project",
+				ID: "nested-project",
 				Codebase: Codebase{
 					Language: "rust",
 				},
@@ -172,10 +172,10 @@ func TestWithContext_Chaining(t *testing.T) {
 	// Test that WithContext can be chained
 	ctx := context.Background()
 
-	definition1 := ProjectDefinition{Name: "project1"}
+	definition1 := ProjectDefinition{ID: "project1"}
 	ctx1 := WithContext(ctx, definition1)
 
-	definition2 := ProjectDefinition{Name: "project2"}
+	definition2 := ProjectDefinition{ID: "project2"}
 	ctx2 := WithContext(ctx1, definition2)
 
 	// The last definition should be retrieved
@@ -202,6 +202,6 @@ func TestFromContext_TypeAssertion(t *testing.T) {
 	assert.Panics(t, func() { FromContext(ctxWithStruct) })
 
 	// Only the correct type should work
-	ctxWithProject := WithContext(ctx, ProjectDefinition{Name: "test"})
+	ctxWithProject := WithContext(ctx, ProjectDefinition{ID: "test"})
 	assert.NotPanics(t, func() { FromContext(ctxWithProject) })
 }

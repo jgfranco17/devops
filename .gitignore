@@ -28,3 +28,6 @@ devops
 # Go workspace
 go.work
 go.work.sum
+
+# CLI outputs
+.devops/

@@ -38,6 +38,7 @@ func main() {
 		core.GetBuildCommand(executor),
 		core.GetTestCommand(executor),
 		core.GetDoctorCommand(executor),
+		core.GetManifestCommand(),
 		core.GetDocsCommand(),
 	}
 	command.RegisterCommands(commandsList)

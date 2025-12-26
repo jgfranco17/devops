@@ -1,12 +1,13 @@
-name: devops
-description: DevOps CLI - Simplifying your CI/CD pipelines
+id: devops
+name: Devops CLI
+description: Simplifying your CI/CD pipelines
 version: 0.0.2
 repo_url: https://github.com/jgfranco17/devops
 
 codebase:
   language: go
   dependencies:
-    - go.mod
+    - https://github.com/jgfranco17/dev-tooling-go
   install:
     fail_fast: true
     env:

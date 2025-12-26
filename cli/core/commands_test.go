@@ -66,7 +66,7 @@ func TestGetTestCommand(t *testing.T) {
 			name: "successful test execution",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID: "test-project",
 					Codebase: config.Codebase{
 						Test: config.Operation{
 							Steps: []string{"go test ./...", "go test -race ./..."},
@@ -84,7 +84,7 @@ func TestGetTestCommand(t *testing.T) {
 			name: "test with no steps should warn",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID: "test-project",
 					Codebase: config.Codebase{
 						Test: config.Operation{
 							Steps: []string{},
@@ -101,7 +101,7 @@ func TestGetTestCommand(t *testing.T) {
 			name: "test failure should return error",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID: "test-project",
 					Codebase: config.Codebase{
 						Test: config.Operation{
 							Steps: []string{"go test ./..."},
@@ -119,7 +119,7 @@ func TestGetTestCommand(t *testing.T) {
 			name: "test with environment variables",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID: "test-project",
 					Codebase: config.Codebase{
 						Test: config.Operation{
 							Env: map[string]string{
@@ -148,7 +148,7 @@ func TestGetTestCommand(t *testing.T) {
 			name: "test with fail_fast enabled",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID: "test-project",
 					Codebase: config.Codebase{
 						Test: config.Operation{
 							FailFast: true,
@@ -228,7 +228,7 @@ func TestGetBuildCommand(t *testing.T) {
 			name: "successful build execution",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "build-project",
+					ID: "build-project",
 					Codebase: config.Codebase{
 						Build: config.Operation{
 							Steps: []string{"go build ./...", "go build -o ./bin/app ."},
@@ -246,7 +246,7 @@ func TestGetBuildCommand(t *testing.T) {
 			name: "build with no steps should warn",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "build-project",
+					ID: "build-project",
 					Codebase: config.Codebase{
 						Build: config.Operation{
 							Steps: []string{},
@@ -263,7 +263,7 @@ func TestGetBuildCommand(t *testing.T) {
 			name: "build failure should return error",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "build-project",
+					ID: "build-project",
 					Codebase: config.Codebase{
 						Build: config.Operation{
 							Steps: []string{"go build ./..."},
@@ -281,7 +281,7 @@ func TestGetBuildCommand(t *testing.T) {
 			name: "build with environment variables",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "build-project",
+					ID: "build-project",
 					Codebase: config.Codebase{
 						Build: config.Operation{
 							Env: map[string]string{
@@ -310,7 +310,7 @@ func TestGetBuildCommand(t *testing.T) {
 			name: "build with fail_fast enabled",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "build-project",
+					ID: "build-project",
 					Codebase: config.Codebase{
 						Build: config.Operation{
 							FailFast: true,
@@ -405,7 +405,7 @@ func TestGetBuildCommand_Integration(t *testing.T) {
 	logger := logging.New(os.Stderr, logrus.InfoLevel)
 	ctx := logging.WithContext(context.Background(), logger)
 	projectDef := config.ProjectDefinition{
-		Name: "integration-build",
+		ID: "integration-build",
 		Codebase: config.Codebase{
 			Build: config.Operation{
 				Steps: []string{"go clean -testcache", "go test -cover ./...", "go build -ldflags=\"-s -w\" -o ./devops .", "chmod +x ./devops"},
@@ -437,7 +437,7 @@ func TestGetTestCommand_Integration(t *testing.T) {
 	logger := logging.New(os.Stderr, logrus.InfoLevel)
 	ctx := logging.WithContext(context.Background(), logger)
 	projectDef := config.ProjectDefinition{
-		Name: "integration-test",
+		ID: "integration-test",
 		Codebase: config.Codebase{
 			Test: config.Operation{
 				Steps: []string{"go test ./...", "go test -race ./..."},
@@ -492,7 +492,7 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "successful validation with complete config",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name:        "test-project",
+					ID:          "test-project",
 					Description: "A test project",
 					Version:     "1.0.0",
 					RepoUrl:     "https://github.com/test/project",
@@ -516,7 +516,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing language should fail",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Test: config.Operation{
 							Steps: []string{"go test ./..."},
@@ -533,7 +534,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing test steps should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 						Build: config.Operation{
@@ -548,7 +550,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing build steps should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 						Test: config.Operation{
@@ -563,7 +566,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing dependencies should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 						Test: config.Operation{
@@ -581,7 +585,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with all optional fields missing should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 					},
@@ -593,7 +598,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with empty language should fail",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					Name: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "",
 						Test: config.Operation{
@@ -630,22 +636,17 @@ func TestGetDoctorCommand(t *testing.T) {
 
 			// Execute command
 			err := cmd.Execute()
-
 			output := buf.String()
-
 			if tt.expectedError != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.ErrorContains(t, err, tt.expectedError)
 			} else {
 				assert.NoError(t, err)
 			}
-
 			if tt.expectWarnings {
 				// Check for warning messages in output
 				assert.Contains(t, output, "[~]")
 			}
 
-			// Verify no shell executor calls were made (doctor only validates config)
 			mockExecutor.AssertExpectations(t)
 		})
 	}
@@ -691,7 +692,7 @@ func TestGetDoctorCommand_Integration(t *testing.T) {
 	logger := logging.New(os.Stderr, logrus.InfoLevel)
 	ctx := logging.WithContext(context.Background(), logger)
 	projectDef := config.ProjectDefinition{
-		Name:        "integration-doctor",
+		ID:          "integration-doctor",
 		Description: "Integration test project",
 		Version:     "2.0.0",
 		RepoUrl:     "https://github.com/integration/test",

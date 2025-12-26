@@ -40,7 +40,7 @@ func TestProjectDefinition_Test(t *testing.T) {
 		{
 			name: "successful test with steps",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Test: Operation{
 						Steps: []string{"go test ./...", "go test -race ./..."},
@@ -56,7 +56,7 @@ func TestProjectDefinition_Test(t *testing.T) {
 		{
 			name: "test with no steps should warn",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Test: Operation{
 						Steps: []string{},
@@ -71,7 +71,7 @@ func TestProjectDefinition_Test(t *testing.T) {
 		{
 			name: "test failure should return error",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Test: Operation{
 						Steps: []string{"go test ./..."},
@@ -87,7 +87,7 @@ func TestProjectDefinition_Test(t *testing.T) {
 		{
 			name: "test with environment variables",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Test: Operation{
 						Env: map[string]string{
@@ -114,7 +114,7 @@ func TestProjectDefinition_Test(t *testing.T) {
 		{
 			name: "test with fail_fast enabled",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Test: Operation{
 						FailFast: true,
@@ -163,7 +163,7 @@ func TestProjectDefinition_Build(t *testing.T) {
 		{
 			name: "successful build with steps",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Build: Operation{
 						Steps: []string{"echo hello", "echo world"},
@@ -179,7 +179,7 @@ func TestProjectDefinition_Build(t *testing.T) {
 		{
 			name: "build with no steps should warn",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Build: Operation{
 						Steps: []string{},
@@ -192,7 +192,7 @@ func TestProjectDefinition_Build(t *testing.T) {
 		{
 			name: "build failure should return error",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID: "test-project",
 				Codebase: Codebase{
 					Build: Operation{
 						Steps: []string{"false"},
@@ -237,8 +237,8 @@ func TestLoad(t *testing.T) {
 	}{
 		{
 			name: "valid YAML",
-			yamlContent: `
-name: test-project
+			yamlContent: `---
+id: test-project
 description: A test project
 version: 1.0.0
 repo_url: https://github.com/test/project
@@ -254,7 +254,7 @@ codebase:
 `,
 			expectError: false,
 			validate: func(t *testing.T, cfg *ProjectDefinition) {
-				assert.Equal(t, "test-project", cfg.Name)
+				assert.Equal(t, "test-project", cfg.ID)
 				assert.Equal(t, "A test project", cfg.Description)
 				assert.Equal(t, "1.0.0", cfg.Version)
 				assert.Equal(t, "https://github.com/test/project", cfg.RepoUrl)
@@ -267,7 +267,7 @@ codebase:
 		{
 			name: "invalid YAML",
 			yamlContent: `
-name: test-project
+id: test-project
 description: A test project
 version: 1.0.0
 repo_url: https://github.com/test/project
@@ -451,7 +451,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "complete valid configuration",
 			project: ProjectDefinition{
-				Name:        "test-project",
+				ID:          "test-project",
 				Description: "A test project",
 				Version:     "1.0.0",
 				RepoUrl:     "https://github.com/test/project",
@@ -470,17 +470,18 @@ func TestProjectDefinition_Validate(t *testing.T) {
 				},
 			},
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[✔] Dependencies:",
-				"[✔] Install steps (1)",
-				"[✔] Test steps (1)",
-				"[✔] Build steps (1)",
+				"Language: go",
+				"Dependencies:",
+				"Install steps (1)",
+				"Test steps (1)",
+				"Build steps (1)",
 			},
 		},
 		{
 			name: "missing language should fail",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Test: Operation{
 						Steps: []string{"go test ./..."},
@@ -492,7 +493,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			},
 			expectedError: "found 1 required fixes",
 			outputChecks: []string{
-				"[✘] Language is required",
+				"Language is required",
 				"Fixes:",
 				"Set a language in the codebase",
 			},
@@ -500,7 +501,8 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "empty language should fail",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "",
 					Test: Operation{
@@ -513,13 +515,14 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			},
 			expectedError: "found 1 required fixes",
 			outputChecks: []string{
-				"[✘] Language is required",
+				"Language is required",
 			},
 		},
 		{
 			name: "missing dependencies should warn but pass",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
 					Test: Operation{
@@ -532,18 +535,17 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			},
 			expectWarnings: true,
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[~] No dependencies defined",
-				"[✔] Test steps (1)",
-				"[✔] Build steps (1)",
-				"Suggestions:",
-				"Set dependencies in the codebase",
+				"Language: go",
+				"No dependencies defined",
+				"Test steps (1)",
+				"Build steps (1)",
 			},
 		},
 		{
 			name: "missing test steps should warn but pass",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -554,10 +556,10 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			},
 			expectWarnings: true,
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[✔] Dependencies:",
-				"[~] No test steps defined",
-				"[✔] Build steps (1)",
+				"Language: go",
+				"Dependencies:",
+				"No test steps defined",
+				"Build steps (1)",
 				"Suggestions:",
 				"Set test steps in the codebase",
 			},
@@ -565,7 +567,8 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "missing build steps should warn but pass",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -576,10 +579,10 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			},
 			expectWarnings: true,
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[✔] Dependencies:",
-				"[✔] Test steps (1)",
-				"[~] No build steps defined",
+				"Language: go",
+				"Dependencies:",
+				"Test steps (1)",
+				"No build steps defined",
 				"Suggestions:",
 				"Set build steps in the codebase",
 			},
@@ -587,7 +590,8 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "missing install steps should not warn (optional)",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -600,45 +604,46 @@ func TestProjectDefinition_Validate(t *testing.T) {
 				},
 			},
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[✔] Dependencies:",
-				"[✔] Test steps (1)",
-				"[✔] Build steps (1)",
+				"Language: go",
+				"Dependencies:",
+				"Test steps (1)",
+				"Build steps (1)",
 			},
 		},
 		{
 			name: "minimal valid configuration with only language",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
 				},
 			},
 			expectWarnings: true,
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[~] No dependencies defined",
-				"[~] No test steps defined",
-				"[~] No build steps defined",
+				"Language: go",
+				"No dependencies defined",
+				"No test steps defined",
+				"No build steps defined",
 				"Suggestions:",
 			},
 		},
 		{
 			name: "multiple warnings should be grouped",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
 				},
 			},
 			expectWarnings: true,
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[~] No dependencies defined",
-				"[~] No test steps defined",
-				"[~] No build steps defined",
+				"Language: go",
+				"No dependencies defined",
+				"No test steps defined",
+				"No build steps defined",
 				"Suggestions:",
-				"Set dependencies in the codebase",
 				"Set test steps in the codebase",
 				"Set build steps in the codebase",
 			},
@@ -646,7 +651,8 @@ func TestProjectDefinition_Validate(t *testing.T) {
 		{
 			name: "nil dependencies should not cause issues",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: nil,
@@ -660,16 +666,17 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			},
 			expectWarnings: true,
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[~] No dependencies defined",
-				"[✔] Test steps (1)",
-				"[✔] Build steps (1)",
+				"Language: go",
+				"No dependencies defined",
+				"Test steps (1)",
+				"Build steps (1)",
 			},
 		},
 		{
 			name: "nil steps should not cause issues",
 			project: ProjectDefinition{
-				Name: "test-project",
+				ID:      "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -686,10 +693,10 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			},
 			expectWarnings: true,
 			outputChecks: []string{
-				"[✔] Language: go",
-				"[✔] Dependencies:",
-				"[~] No test steps defined",
-				"[~] No build steps defined",
+				"Language: go",
+				"Dependencies:",
+				"No test steps defined",
+				"No build steps defined",
 			},
 		},
 	}
@@ -729,6 +736,213 @@ func TestProjectDefinition_Validate(t *testing.T) {
 	}
 }
 
+func TestValidateProjectName(t *testing.T) {
+	tests := []struct {
+		name        string
+		projectName string
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "valid simple name",
+			projectName: "test",
+			expectError: false,
+		},
+		{
+			name:        "valid name with underscores",
+			projectName: "test_project",
+			expectError: false,
+		},
+		{
+			name:        "valid name with dashes",
+			projectName: "test-project",
+			expectError: false,
+		},
+		{
+			name:        "valid name with numbers",
+			projectName: "test123",
+			expectError: false,
+		},
+		{
+			name:        "valid mixed alphanumeric with underscores and dashes",
+			projectName: "my_test-project2",
+			expectError: false,
+		},
+		{
+			name:        "valid name at max length (29 chars)",
+			projectName: "thisIsAVeryLongProjectName29",
+			expectError: false,
+		},
+		{
+			name:        "valid single character",
+			projectName: "a",
+			expectError: false,
+		},
+		{
+			name:        "valid uppercase start",
+			projectName: "TestProject",
+			expectError: false,
+		},
+		{
+			name:        "empty name",
+			projectName: "",
+			expectError: true,
+			errorMsg:    "ID cannot be empty",
+		},
+		{
+			name:        "name too long",
+			projectName: "thisIsAnExtremelyLongProjectNameThatExceedsThirtyCharacters",
+			expectError: true,
+			errorMsg:    "ID must be under 30 characters",
+		},
+		{
+			name:        "starts with number",
+			projectName: "1test",
+			expectError: true,
+			errorMsg:    "ID must start with a letter",
+		},
+		{
+			name:        "starts with dash",
+			projectName: "-test",
+			expectError: true,
+			errorMsg:    "ID must start with a letter",
+		},
+		{
+			name:        "contains space",
+			projectName: "test project",
+			expectError: true,
+			errorMsg:    "ID cannot contain whitespace",
+		},
+		{
+			name:        "leading space",
+			projectName: " test",
+			expectError: true,
+			errorMsg:    "ID must start with a letter", // Space character is not a letter
+		},
+		{
+			name:        "trailing space",
+			projectName: "test ",
+			expectError: true,
+			errorMsg:    "ID cannot contain whitespace",
+		},
+
+		// Invalid names - invalid characters
+		{
+			name:        "contains special characters",
+			projectName: "test@project",
+			expectError: true,
+			errorMsg:    "ID can only contain letters, numbers, dashes, and underscores",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateProjectName(tt.projectName)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestProjectDefinition_ValidateNameIntegration(t *testing.T) {
+	tests := []struct {
+		name           string
+		projectName    string
+		expectError    bool
+		outputContains []string
+	}{
+		{
+			name:        "valid name shows checkmark",
+			projectName: "validProject",
+			expectError: false,
+			outputContains: []string{
+				"ID: validProject",
+			},
+		},
+		{
+			name:        "empty name shows error",
+			projectName: "",
+			expectError: true,
+			outputContains: []string{
+				"ID is required",
+				"Set an ID for the project",
+			},
+		},
+		{
+			name:        "invalid name shows validation error",
+			projectName: "123invalid",
+			expectError: true,
+			outputContains: []string{
+				"Invalid ID: ID must start with a letter",
+				"Use a valid project ID (alphanumeric/dashes/underscores, starts with letter, no whitespace, under 30 chars)",
+			},
+		},
+		{
+			name:        "name with spaces shows whitespace error",
+			projectName: "invalid name",
+			expectError: true,
+			outputContains: []string{
+				"Invalid ID: ID cannot contain whitespace",
+				"Use a valid project ID (alphanumeric/dashes/underscores, starts with letter, no whitespace, under 30 chars)",
+			},
+		},
+		{
+			name:        "name too long shows length error",
+			projectName: "thisNameIsWayTooLongAndExceedsThirtyCharacterLimit",
+			expectError: true,
+			outputContains: []string{
+				"Invalid ID: ID must be under 30 characters",
+				"Use a valid project ID (alphanumeric/dashes/underscores, starts with letter, no whitespace, under 30 chars)",
+			},
+		},
+		{
+			name:        "name with special characters shows character error",
+			projectName: "invalid@name",
+			expectError: true,
+			outputContains: []string{
+				"Invalid ID: ID can only contain letters, numbers, dashes, and underscores",
+				"Use a valid project ID (alphanumeric/dashes/underscores, starts with letter, no whitespace, under 30 chars)",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			logger := logging.New(os.Stderr, logrus.InfoLevel)
+			ctx := logging.WithContext(context.Background(), logger)
+
+			project := ProjectDefinition{
+				ID:      tt.projectName,
+				RepoUrl: "https://github.com/test/project",
+				Codebase: Codebase{
+					Language: "go", // Valid language to focus on name validation
+				},
+			}
+
+			err := project.ValidateTo(ctx, &buf)
+			output := buf.String()
+
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			for _, expectedOutput := range tt.outputContains {
+				assert.Contains(t, output, expectedOutput, "Expected output to contain: %s", expectedOutput)
+			}
+		})
+	}
+}
+
 func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 	t.Run("validation with empty project definition", func(t *testing.T) {
 		var buf bytes.Buffer
@@ -741,8 +955,10 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		output := buf.String()
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "found 1 required fixes")
-		assert.Contains(t, output, "[✘] Language is required")
+		assert.Contains(t, err.Error(), "found 3 required fixes") // ID, RepoUrl, and Language
+		assert.Contains(t, output, "ID is required")
+		assert.Contains(t, output, "Repository URL is required")
+		assert.Contains(t, output, "Language is required")
 	})
 
 	t.Run("validation with whitespace language should pass", func(t *testing.T) {
@@ -751,7 +967,8 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		ctx := logging.WithContext(context.Background(), logger)
 
 		project := ProjectDefinition{
-			Name: "test-project",
+			ID:      "test-project",
+			RepoUrl: "https://github.com/test/project",
 			Codebase: Codebase{
 				Language: "   ", // whitespace only
 			},
@@ -761,7 +978,8 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		output := buf.String()
 
 		assert.NoError(t, err)
-		assert.Contains(t, output, "[✔] Language:    ") // Should show the whitespace
+		assert.Contains(t, output, "ID: test-project")
+		assert.Contains(t, output, "Language:    ") // Should show the whitespace
 	})
 
 	t.Run("validation with complex dependencies", func(t *testing.T) {
@@ -770,7 +988,8 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		ctx := logging.WithContext(context.Background(), logger)
 
 		project := ProjectDefinition{
-			Name: "test-project",
+			ID:      "test-project",
+			RepoUrl: "https://github.com/test/project",
 			Codebase: Codebase{
 				Language: "go",
 				Dependencies: []string{
@@ -785,7 +1004,8 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		output := buf.String()
 
 		assert.NoError(t, err)
-		assert.Contains(t, output, "[✔] Language: go")
-		assert.Contains(t, output, "[✔] Dependencies:")
+		assert.Contains(t, output, "ID: test-project")
+		assert.Contains(t, output, "Language: go")
+		assert.Contains(t, output, "Dependencies:")
 	})
 }
