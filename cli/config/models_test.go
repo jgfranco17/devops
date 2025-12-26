@@ -481,6 +481,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "missing language should fail",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Test: Operation{
 						Steps: []string{"go test ./..."},
@@ -501,6 +502,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "empty language should fail",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "",
 					Test: Operation{
@@ -520,6 +522,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "missing dependencies should warn but pass",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
 					Test: Operation{
@@ -542,6 +545,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "missing test steps should warn but pass",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -564,6 +568,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "missing build steps should warn but pass",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -586,6 +591,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "missing install steps should not warn (optional)",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -608,6 +614,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "minimal valid configuration with only language",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
 				},
@@ -625,6 +632,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "multiple warnings should be grouped",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go",
 				},
@@ -644,6 +652,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "nil dependencies should not cause issues",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: nil,
@@ -667,6 +676,7 @@ func TestProjectDefinition_Validate(t *testing.T) {
 			name: "nil steps should not cause issues",
 			project: ProjectDefinition{
 				ID: "test-project",
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language:     "go",
 					Dependencies: []string{"github.com/stretchr/testify"},
@@ -911,6 +921,7 @@ func TestProjectDefinition_ValidateNameIntegration(t *testing.T) {
 
 			project := ProjectDefinition{
 				ID: tt.projectName,
+				RepoUrl: "https://github.com/test/project",
 				Codebase: Codebase{
 					Language: "go", // Valid language to focus on name validation
 				},
@@ -944,8 +955,9 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 		output := buf.String()
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "found 2 required fixes") // Now includes name validation
+		assert.Contains(t, err.Error(), "found 3 required fixes") // ID, RepoUrl, and Language
 		assert.Contains(t, output, "ID is required")
+		assert.Contains(t, output, "Repository URL is required")
 		assert.Contains(t, output, "Language is required")
 	})
 
@@ -956,6 +968,7 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 
 		project := ProjectDefinition{
 			ID: "test-project",
+			RepoUrl: "https://github.com/test/project",
 			Codebase: Codebase{
 				Language: "   ", // whitespace only
 			},
@@ -976,6 +989,7 @@ func TestProjectDefinition_Validate_EdgeCases(t *testing.T) {
 
 		project := ProjectDefinition{
 			ID: "test-project",
+			RepoUrl: "https://github.com/test/project",
 			Codebase: Codebase{
 				Language: "go",
 				Dependencies: []string{

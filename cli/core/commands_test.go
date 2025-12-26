@@ -516,7 +516,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing language should fail",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					ID: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Test: config.Operation{
 							Steps: []string{"go test ./..."},
@@ -533,7 +534,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing test steps should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					ID: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 						Build: config.Operation{
@@ -548,7 +550,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing build steps should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					ID: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 						Test: config.Operation{
@@ -563,7 +566,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with missing dependencies should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					ID: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 						Test: config.Operation{
@@ -581,7 +585,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with all optional fields missing should warn but pass",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					ID: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "go",
 					},
@@ -593,7 +598,8 @@ func TestGetDoctorCommand(t *testing.T) {
 			name: "validation with empty language should fail",
 			configSetup: func() config.ProjectDefinition {
 				return config.ProjectDefinition{
-					ID: "test-project",
+					ID:      "test-project",
+					RepoUrl: "https://github.com/test/project",
 					Codebase: config.Codebase{
 						Language: "",
 						Test: config.Operation{
@@ -630,22 +636,17 @@ func TestGetDoctorCommand(t *testing.T) {
 
 			// Execute command
 			err := cmd.Execute()
-
 			output := buf.String()
-
 			if tt.expectedError != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.ErrorContains(t, err, tt.expectedError)
 			} else {
 				assert.NoError(t, err)
 			}
-
 			if tt.expectWarnings {
 				// Check for warning messages in output
 				assert.Contains(t, output, "[~]")
 			}
 
-			// Verify no shell executor calls were made (doctor only validates config)
 			mockExecutor.AssertExpectations(t)
 		})
 	}
