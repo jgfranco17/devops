@@ -47,10 +47,14 @@ jobs:
       - name: Run setup
         uses: ./.github/actions/setup-workspace
 
-      - name: Run tests
+      - name: Run Go tests
         run: |
           go clean -testcache
           go test -v -cover -race ./...
+
+      - name: Run Python tests
+        run: |
+          uv run pytest -vv
 
   build:
     name: Build
